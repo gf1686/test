@@ -4,4 +4,6 @@ Git is free software distributed under the GPL.
 新增一行，测试分支冲突1+1=2
 修改了本地
 我再远程进行了修改
+20190525修改文件：
+今天测试一下Git
 
