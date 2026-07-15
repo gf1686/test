@@ -1,13 +1,175 @@
-GitHub Pages 个人静态首页（可直接上传）
-我的个人主页
-欢迎访问我的 GitHub Pages 静态站点 ✨
-关于我
-大家好！这是我通过 GitHub Pages 部署的个人静态主页，用于展示我的作品、笔记和个人介绍。
-这个页面使用纯 HTML、CSS 编写，简洁、轻量，适配电脑、手机等各类设备，可直接上传到 GitHub 仓库使用。
-后续我会持续更新内容，分享我的学习心得和项目经验，感谢你的访问！
-我的链接
-- 我的 GitHub
-- 个人作品
-- 学习笔记
-- 联系我
-© 2026 我的个人主页 | 部署于 GitHub Pages
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>首页 - 我的网站</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Microsoft YaHei", sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #333;
+    }
+
+    .container {
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .logo {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      animation: bounce 2s infinite ease-in-out;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-15px); }
+    }
+
+    .hero-card {
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 3rem 2.5rem;
+      max-width: 600px;
+      width: 90%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .hero-title {
+      font-size: 2.5rem;
+      color: #2d3748;
+      margin-bottom: 0.5rem;
+      font-weight: 800;
+    }
+
+    .hero-subtitle {
+      font-size: 1.15rem;
+      color: #718096;
+      margin-bottom: 2rem;
+      line-height: 1.6;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 0.85rem 2rem;
+      border-radius: 50px;
+      text-decoration: none;
+      font-size: 1rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-secondary {
+      background: #edf2f7;
+      color: #4a5568;
+    }
+
+    .btn-secondary:hover {
+      background: #e2e8f0;
+      transform: translateY(-3px);
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1.5rem;
+      margin-top: 2.5rem;
+    }
+
+    .feature {
+      text-align: center;
+    }
+
+    .feature-icon {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .feature-text {
+      font-size: 0.9rem;
+      color: #718096;
+    }
+
+    .footer {
+      margin-top: 3rem;
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 0.85rem;
+    }
+
+    .footer a {
+      color: rgba(255, 255, 255, 1);
+      text-decoration: none;
+      border-bottom: 1px dashed rgba(255, 255, 255, 0.5);
+    }
+
+    .footer a:hover {
+      border-bottom-style: solid;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">🚀</div>
+    <div class="hero-card">
+      <h1 class="hero-title">欢迎来到我的网站</h1>
+      <p class="hero-subtitle">
+        这是一个现代化的首页示例，简洁优雅，响应式设计，<br>
+        适配各种设备屏幕。你可以在这里开始你的旅程。
+      </p>
+
+      <div class="btn-group">
+        <a href="#" class="btn btn-primary">开始探索</a>
+        <a href="#" class="btn btn-secondary">了解更多</a>
+      </div>
+
+      <div class="features">
+        <div class="feature">
+          <div class="feature-icon">⚡</div>
+          <div class="feature-text">极速加载</div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">📱</div>
+          <div class="feature-text">响应式设计</div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">🎨</div>
+          <div class="feature-text">精美界面</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      &copy; 2026 我的网站 · 访问不存在的页面试试 <a href="/404.html">404 页面</a>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>404 - 页面未找到</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Microsoft YaHei", sans-serif;
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #333;
+    }
+
+    .container {
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .error-card {
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 3rem 2.5rem;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    }
+
+    .error-code {
+      font-size: 7rem;
+      font-weight: 900;
+      background: linear-gradient(135deg, #f093fb, #f5576c);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+      animation: pulse 2s infinite ease-in-out;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.05); opacity: 0.9; }
+    }
+
+    .error-emoji {
+      font-size: 3rem;
+      margin: 1rem 0;
+      display: inline-block;
+      animation: shake 1.5s infinite ease-in-out;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(-10deg); }
+      75% { transform: rotate(10deg); }
+    }
+
+    .error-title {
+      font-size: 1.5rem;
+      color: #2d3748;
+      margin-bottom: 0.5rem;
+      font-weight: 700;
+    }
+
+    .error-desc {
+      font-size: 1rem;
+      color: #718096;
+      margin-bottom: 2rem;
+      line-height: 1.6;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 0.85rem 2rem;
+      border-radius: 50px;
+      text-decoration: none;
+      font-size: 1rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      background: linear-gradient(135deg, #f093fb, #f5576c);
+      color: #fff;
+    }
+
+    .btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 25px rgba(245, 87, 108, 0.4);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: #f5576c;
+      border: 2px solid #f5576c;
+      margin-left: 0.5rem;
+    }
+
+    .btn-outline:hover {
+      background: #f5576c;
+      color: #fff;
+      box-shadow: none;
+    }
+
+    .suggestions {
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    .suggestions-title {
+      font-size: 0.85rem;
+      color: #a0aec0;
+      margin-bottom: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .suggestion-links {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .suggestion-links a {
+      color: #718096;
+      text-decoration: none;
+      font-size: 0.9rem;
+      padding: 0.4rem 1rem;
+      border-radius: 50px;
+      background: #f7fafc;
+      transition: all 0.3s ease;
+    }
+
+    .suggestion-links a:hover {
+      background: #edf2f7;
+      color: #f5576c;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="error-card">
+      <div class="error-code">404</div>
+      <div class="error-emoji">🔍</div>
+      <h1 class="error-title">页面未找到</h1>
+      <p class="error-desc">
+        抱歉，你访问的页面不存在或已被移动。<br>
+        请检查网址是否正确，或返回首页继续浏览。
+      </p>
+
+      <a href="/index.html" class="btn">返回首页</a>
+      <a href="javascript:history.back()" class="btn btn-outline">返回上页</a>
+
+      <div class="suggestions">
+        <div class="suggestions-title">你可能想去</div>
+        <div class="suggestion-links">
+          <a href="/index.html">🏠 首页</a>
+          <a href="#">📂 关于我们</a>
+          <a href="#">📞 联系方式</a>
+          <a href="#">❓ 帮助中心</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
