@@ -33,6 +33,25 @@ jobs:
         uses: actions/checkout@v4
       - name: Setup Pages
         uses: actions/configure-pages@v5
+      - name: Generate page navigation JSON
+        run: |
+          # 扫描 page/ 目录下所有 .html 文件，生成导航 JSON
+          echo '[' > page/nav.json
+          first=true
+          for f in page/*.html; do
+            [ -f "$f" ] || continue
+            filename=$(basename "$f")
+            if [ "$first" = true ]; then
+              first=false
+            else
+              echo ',' >> page/nav.json
+            fi
+            name="${filename%.html}"
+            echo "  {\"name\": \"$name\", \"url\": \"$f\"}" >> page/nav.json
+          done
+          echo ']' >> page/nav.json
+          echo "已生成 page/nav.json:"
+          cat page/nav.json
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

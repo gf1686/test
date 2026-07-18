@@ -134,6 +134,94 @@
     .footer a:hover {
       border-bottom-style: solid;
     }
+
+    /* ====== 页面导航区域 ====== */
+    .nav-section {
+      margin-top: 2rem;
+      width: 100%;
+      max-width: 600px;
+      width: 90%;
+    }
+
+    .nav-card {
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 2rem 2.5rem;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      text-align: left;
+    }
+
+    .nav-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #2d3748;
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .nav-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .nav-item {
+      border-bottom: 1px solid #edf2f7;
+    }
+
+    .nav-item:last-child {
+      border-bottom: none;
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.85rem 0.5rem;
+      text-decoration: none;
+      color: #4a5568;
+      font-size: 0.95rem;
+      font-weight: 500;
+      border-radius: 10px;
+      transition: all 0.25s ease;
+    }
+
+    .nav-link:hover {
+      background: #f7fafc;
+      color: #667eea;
+      padding-left: 0.8rem;
+    }
+
+    .nav-link-icon {
+      font-size: 1.2rem;
+    }
+
+    .nav-link-arrow {
+      color: #cbd5e0;
+      font-size: 0.8rem;
+      transition: transform 0.25s ease;
+    }
+
+    .nav-link:hover .nav-link-arrow {
+      transform: translateX(4px);
+      color: #667eea;
+    }
+
+    .nav-empty {
+      text-align: center;
+      color: #a0aec0;
+      padding: 1rem 0;
+      font-size: 0.9rem;
+    }
+
+    .nav-error {
+      text-align: center;
+      color: #e53e3e;
+      padding: 0.5rem 0;
+      font-size: 0.85rem;
+    }
   </style>
 </head>
 <body>
@@ -167,9 +255,48 @@
       </div>
     </div>
 
+    <!-- 页面导航区域：由 JS 动态渲染 -->
+    <div class="nav-section">
+      <div class="nav-card">
+        <div class="nav-title">📂 Page 目录页面</div>
+        <ul class="nav-list" id="pageNavList">
+          <li class="nav-empty">加载中...</li>
+        </ul>
+      </div>
+    </div>
+
     <div class="footer">
       &copy; 2026 我的网站 · 访问不存在的页面试试 <a href="/404.html">404 页面</a>
     </div>
   </div>
 </body>
+<script>
+  // 动态加载 page/nav.json 并渲染页面导航
+  (async function () {
+    const listEl = document.getElementById('pageNavList');
+    try {
+      const resp = await fetch('page/nav.json');
+      if (!resp.ok) {
+        throw new Error('nav.json 不存在');
+      }
+      const pages = await resp.json();
+      if (!pages || pages.length === 0) {
+        listEl.innerHTML = '<li class="nav-empty">暂无页面</li>';
+        return;
+      }
+      listEl.innerHTML = pages.map(function (p) {
+        return (
+          '<li class="nav-item">' +
+          '<a class="nav-link" href="' + p.url + '">' +
+          '<span><span class="nav-link-icon">📄</span> ' + p.name + '</span>' +
+          '<span class="nav-link-arrow">→</span>' +
+          '</a>' +
+          '</li>'
+        );
+      }).join('');
+    } catch (e) {
+      listEl.innerHTML = '<li class="nav-empty">暂无页面（nav.json 未生成）</li>';
+    }
+  })();
+</script>
 </html>
