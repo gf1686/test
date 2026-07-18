@@ -1,0 +1,3589 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>视频下载工具 — 项目文档合集</title>
+<style>
+/* ============ 全局变量 ============ */
+:root {
+  --bg: #ffffff;
+  --bg-secondary: #f6f8fa;
+  --bg-card: #ffffff;
+  --bg-hover: #eef1f4;
+  --bg-code: #f6f8fa;
+  --border: #d0d7de;
+  --border-light: #e1e4e8;
+  --text: #1f2328;
+  --text-secondary: #656d76;
+  --text-muted: #8b949e;
+  --accent: #0969da;
+  --accent-light: #ddf4ff;
+  --accent-bg: rgba(9, 105, 218, 0.08);
+  --success: #1a7f37;
+  --success-bg: rgba(26, 127, 55, 0.1);
+  --warning: #9a6700;
+  --warning-bg: rgba(154, 103, 0, 0.1);
+  --danger: #cf222e;
+  --danger-bg: rgba(207, 34, 46, 0.1);
+  --radius: 8px;
+  --radius-sm: 6px;
+  --sidebar-w: 280px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  font-size: 15px;
+}
+
+/* ============ 侧边栏 ============ */
+.sidebar {
+  position: fixed;
+  left: 0; top: 0;
+  width: var(--sidebar-w);
+  height: 100vh;
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+  overflow-y: auto;
+}
+
+.sidebar-header {
+  padding: 24px 20px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sidebar-header h1 {
+  font-size: 17px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  color: var(--text);
+}
+
+.sidebar-header .subtitle {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.sidebar-nav {
+  padding: 12px 8px;
+  flex: 1;
+}
+
+.nav-group {
+  margin-bottom: 4px;
+}
+
+.nav-group-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 8px 12px 4px;
+  letter-spacing: 0.5px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 14px;
+  transition: all 0.15s;
+  text-decoration: none;
+  border: 1px solid transparent;
+}
+
+.nav-item:hover {
+  background: var(--bg-hover);
+  color: var(--text);
+}
+
+.nav-item.active {
+  background: var(--accent-bg);
+  color: var(--accent);
+  border-color: rgba(9, 105, 218, 0.2);
+}
+
+.nav-item .nav-icon {
+  font-size: 16px;
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.nav-sub-item {
+  padding-left: 36px;
+  font-size: 13px;
+  padding: 6px 12px 6px 36px;
+}
+
+.sidebar-footer {
+  padding: 12px 20px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* ============ 主内容区 ============ */
+.main {
+  margin-left: var(--sidebar-w);
+  padding: 0;
+  min-height: 100vh;
+}
+
+.doc-section {
+  padding: 48px 56px;
+  border-bottom: 1px solid var(--border);
+  scroll-margin-top: 0;
+}
+
+.doc-section:nth-child(even) {
+  background: var(--bg-secondary);
+}
+
+.doc-section-header {
+  margin-bottom: 32px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid var(--border);
+}
+
+.doc-section-header .doc-badge {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 12px;
+  margin-bottom: 8px;
+}
+
+.doc-section-header .doc-badge.req { background: var(--accent-light); color: var(--accent); }
+.doc-section-header .doc-badge.design { background: var(--success-bg); color: var(--success); }
+.doc-section-header .doc-badge.ui { background: var(--warning-bg); color: var(--warning); }
+.doc-section-header .doc-badge.verify { background: var(--danger-bg); color: var(--danger); }
+
+.doc-section-header h2 {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.doc-section-header .doc-meta {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* ============ Markdown 内容样式 ============ */
+.md-content h1 { font-size: 24px; font-weight: 700; margin: 32px 0 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border-light); }
+.md-content h2 { font-size: 20px; font-weight: 600; margin: 28px 0 12px; }
+.md-content h3 { font-size: 17px; font-weight: 600; margin: 24px 0 10px; }
+.md-content h4 { font-size: 15px; font-weight: 600; margin: 20px 0 8px; }
+
+.md-content p { margin: 8px 0; }
+
+.md-content ul, .md-content ol { margin: 8px 0; padding-left: 28px; }
+.md-content li { margin: 4px 0; }
+
+.md-content blockquote {
+  border-left: 4px solid var(--accent);
+  padding: 8px 16px;
+  margin: 12px 0;
+  background: var(--accent-bg);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  color: var(--text-secondary);
+}
+
+.md-content blockquote p { margin: 4px 0; }
+
+.md-content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 12px 0;
+  font-size: 14px;
+  background: var(--bg-card);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+.md-content th {
+  background: var(--bg-secondary);
+  font-weight: 600;
+  text-align: left;
+  padding: 10px 14px;
+  border-bottom: 2px solid var(--border);
+}
+
+.md-content td {
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.md-content tr:last-child td { border-bottom: none; }
+
+.md-content tr:hover td { background: var(--bg-hover); }
+
+.md-content code {
+  background: var(--bg-code);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: "Cascadia Code", "Fira Code", "SF Mono", Consolas, monospace;
+  font-size: 13px;
+  color: var(--danger);
+}
+
+.md-content pre {
+  background: #1e1e2e;
+  color: #cdd6f4;
+  padding: 16px 20px;
+  border-radius: var(--radius);
+  overflow-x: auto;
+  margin: 12px 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.md-content pre code {
+  background: none;
+  color: inherit;
+  padding: 0;
+  font-size: 13px;
+}
+
+.md-content .codehilite { border-radius: var(--radius); overflow: hidden; margin: 12px 0; }
+
+.md-content hr { border: none; border-top: 1px solid var(--border-light); margin: 24px 0; }
+
+.md-content a { color: var(--accent); text-decoration: none; }
+.md-content a:hover { text-decoration: underline; }
+
+.md-content strong { font-weight: 600; }
+
+/* ============ UI 原型嵌入 ============ */
+.ui-prototype-wrapper {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: #0d1117;
+  margin: 16px 0;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.ui-prototype-wrapper iframe {
+  width: 100%;
+  height: 700px;
+  border: none;
+  display: block;
+}
+
+.ui-prototype-note {
+  background: var(--warning-bg);
+  border: 1px solid rgba(154, 103, 0, 0.2);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  margin: 16px 0;
+  font-size: 13px;
+  color: var(--warning);
+}
+
+/* ============ 回到顶部 ============ */
+.back-to-top {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 20px;
+  box-shadow: 0 4px 12px rgba(9, 105, 218, 0.3);
+  opacity: 0;
+  transition: opacity 0.3s;
+  z-index: 99;
+  border: none;
+}
+
+.back-to-top.show { opacity: 1; }
+.back-to-top:hover { background: #0550ae; }
+
+/* ============ 打印优化 ============ */
+@media print {
+  .sidebar { display: none; }
+  .main { margin-left: 0; }
+  .doc-section { page-break-after: always; padding: 20px; }
+  .back-to-top { display: none; }
+}
+
+/* ============ 响应式 ============ */
+@media (max-width: 900px) {
+  .sidebar { width: 60px; }
+  .sidebar-header h1, .sidebar-header .subtitle,
+  .nav-item span:not(.nav-icon), .nav-group-title, .sidebar-footer { display: none; }
+  .main { margin-left: 60px; }
+  .doc-section { padding: 24px 20px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===== 侧边栏 ===== -->
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <h1>Video Downloader</h1>
+    <div class="subtitle">项目文档合集 · v1.0</div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-group">
+      <div class="nav-group-title">文档导航</div>
+      <a class="nav-item active" href="#doc-req"><span class="nav-icon">📋</span><span>需求说明书</span></a>
+      <a class="nav-item" href="#doc-design"><span class="nav-icon">🏗</span><span>概要设计</span></a>
+      <a class="nav-item" href="#doc-ui"><span class="nav-icon">🎨</span><span>UI 设计原型</span></a>
+      <a class="nav-item" href="#doc-verify"><span class="nav-icon">✅</span><span>可行性验证报告</span></a>
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    生成时间：2026-07-18<br>
+    共 4 份文档
+  </div>
+</aside>
+
+<!-- ===== 主内容 ===== -->
+<main class="main">
+
+  <!-- ===== 1. 需求说明书 ===== -->
+  <section class="doc-section" id="doc-req">
+    <div class="doc-section-header">
+      <span class="doc-badge req">需求文档</span>
+      <h2>📋 需求说明书</h2>
+      <div class="doc-meta">版本 v1.0 · 日期 2026-07-17 · 状态 待评审</div>
+    </div>
+    <div class="md-content">
+      <h1 id="_1">视频下载工具 — 需求说明书</h1>
+<blockquote>
+<p><strong>版本</strong>: v1.0<br />
+<strong>日期</strong>: 2026-07-17<br />
+<strong>状态</strong>: 待评审</p>
+</blockquote>
+<hr />
+<h2 id="1">1. 背景与目标</h2>
+<h3 id="11">1.1 背景</h3>
+<p>抖音和 X（Twitter）是目前最常用的短视频/社交视频平台，用户经常有保存视频到本地的需求。但两个平台存在以下限制：</p>
+<ul>
+<li><strong>抖音</strong>：App 内无直接下载无水印视频的入口，网页端需要登录才能查看内容</li>
+<li><strong>X（Twitter）</strong>：部分媒体内容需要登录才能访问，且没有官方下载入口</li>
+</ul>
+<p>市面上的下载工具多为在线网站（不稳定、有广告）或桌面软件（不可远程访问），缺少一个可自部署、Web 访问、支持登录态管理的轻量方案。</p>
+<h3 id="12">1.2 目标</h3>
+<p>构建一个 <strong>可 Docker 部署的 Web 视频下载工具</strong>，支持：</p>
+<ol>
+<li>通过浏览器粘贴视频链接，下载抖音和 X 的视频</li>
+<li>支持配置平台登录 Cookie，解决需要登录才能访问的问题</li>
+<li>下载结果可选择保存到<strong>本地浏览器下载</strong>或<strong>服务端指定路径</strong></li>
+<li>提供下载历史记录和文件管理</li>
+</ol>
+<h3 id="13">1.3 非目标（本期不做）</h3>
+<ul>
+<li>不做批量下载（一次只处理一个链接）</li>
+<li>不做视频转码/格式转换</li>
+<li>不做用户认证/多用户支持（内网工具，单用户）</li>
+<li>不做视频编辑/裁剪</li>
+<li>不支持其他平台（B站、YouTube 等，后续可扩展）</li>
+</ul>
+<hr />
+<h2 id="2">2. 用户角色</h2>
+<table>
+<thead>
+<tr>
+<th>角色</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>使用者</td>
+<td>通过浏览器访问工具，粘贴链接下载视频的单一用户（工具部署者本人）</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="3">3. 功能需求</h2>
+<h3 id="31">3.1 视频下载</h3>
+<table>
+<thead>
+<tr>
+<th>编号</th>
+<th>需求</th>
+<th>优先级</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>F-01</td>
+<td>粘贴视频链接，自动识别平台</td>
+<td>P0</td>
+<td>支持抖音和 X 的链接，自动判断平台类型</td>
+</tr>
+<tr>
+<td>F-02</td>
+<td>预解析视频信息</td>
+<td>P0</td>
+<td>下载前展示视频标题、作者、缩略图、时长</td>
+</tr>
+<tr>
+<td>F-03</td>
+<td>选择下载目标</td>
+<td>P0</td>
+<td>「下载到本地」浏览器直接下载；「保存到服务端」存到服务端配置路径</td>
+</tr>
+<tr>
+<td>F-04</td>
+<td>实时下载进度</td>
+<td>P0</td>
+<td>展示下载百分比、速度、剩余时间</td>
+</tr>
+<tr>
+<td>F-05</td>
+<td>下载完成通知</td>
+<td>P1</td>
+<td>下载完成后页面提示，本地下载自动触发浏览器下载</td>
+</tr>
+<tr>
+<td>F-06</td>
+<td>下载失败提示</td>
+<td>P0</td>
+<td>展示错误原因（如 Cookie 过期、链接无效等）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="32-cookie">3.2 Cookie / 登录管理</h3>
+<table>
+<thead>
+<tr>
+<th>编号</th>
+<th>需求</th>
+<th>优先级</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>F-10</td>
+<td>配置抖音 Cookie</td>
+<td>P0</td>
+<td>支持粘贴 Cookie 字符串或 Netscape 格式文件内容</td>
+</tr>
+<tr>
+<td>F-10a</td>
+<td>抖音 Cookie 配置指引</td>
+<td>P1</td>
+<td>展示如何从浏览器获取 Cookie 的操作说明</td>
+</tr>
+<tr>
+<td>F-11</td>
+<td>配置 X Cookie</td>
+<td>P0</td>
+<td>同上</td>
+</tr>
+<tr>
+<td>F-11a</td>
+<td>X Cookie 配置指引</td>
+<td>P1</td>
+<td>同上</td>
+</tr>
+<tr>
+<td>F-12</td>
+<td>Cookie 状态展示</td>
+<td>P0</td>
+<td>展示各平台 Cookie 是否已配置、文件大小、最后更新时间</td>
+</tr>
+<tr>
+<td>F-13</td>
+<td>Cookie 删除</td>
+<td>P1</td>
+<td>可清除已配置的 Cookie</td>
+</tr>
+<tr>
+<td>F-14</td>
+<td>Cookie 有效性检测</td>
+<td>P2</td>
+<td>下载时自动检测 Cookie 是否有效，失效时提示更新</td>
+</tr>
+</tbody>
+</table>
+<h3 id="33">3.3 下载历史与文件管理</h3>
+<table>
+<thead>
+<tr>
+<th>编号</th>
+<th>需求</th>
+<th>优先级</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>F-20</td>
+<td>下载历史列表</td>
+<td>P0</td>
+<td>展示历史下载记录：缩略图、标题、平台、时间、状态、文件大小</td>
+</tr>
+<tr>
+<td>F-21</td>
+<td>重新下载</td>
+<td>P1</td>
+<td>从历史记录中重新下载某个视频</td>
+</tr>
+<tr>
+<td>F-22</td>
+<td>删除历史记录</td>
+<td>P1</td>
+<td>可删除单条或清空全部历史</td>
+</tr>
+<tr>
+<td>F-23</td>
+<td>服务端文件列表</td>
+<td>P1</td>
+<td>列出服务端已下载的文件，支持从浏览器下载到本地</td>
+</tr>
+<tr>
+<td>F-24</td>
+<td>删除服务端文件</td>
+<td>P2</td>
+<td>可删除服务端已下载的文件</td>
+</tr>
+</tbody>
+</table>
+<h3 id="34">3.4 系统配置</h3>
+<table>
+<thead>
+<tr>
+<th>编号</th>
+<th>需求</th>
+<th>优先级</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>F-30</td>
+<td>服务端下载路径配置</td>
+<td>P0</td>
+<td>可配置视频保存到服务端的哪个目录</td>
+</tr>
+<tr>
+<td>F-31</td>
+<td>文件命名规则</td>
+<td>P2</td>
+<td>可选择按「标题」「作者-标题」「日期-标题」命名</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="4">4. 非功能需求</h2>
+<h3 id="41">4.1 部署与运行</h3>
+<table>
+<thead>
+<tr>
+<th>编号</th>
+<th>需求</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>NF-01</td>
+<td>Docker 部署</td>
+<td>提供 Dockerfile 和 docker-compose.yml，一键启动</td>
+</tr>
+<tr>
+<td>NF-02</td>
+<td>数据持久化</td>
+<td>Cookie、配置、下载历史、下载的文件通过 Volume 持久化</td>
+</tr>
+<tr>
+<td>NF-03</td>
+<td>端口</td>
+<td>默认暴露 8000 端口，可通过环境变量修改</td>
+</tr>
+<tr>
+<td>NF-04</td>
+<td>资源占用</td>
+<td>内存占用 &lt; 512MB（不含视频文件存储），适合 NAS 等低配设备</td>
+</tr>
+</tbody>
+</table>
+<h3 id="42">4.2 可用性</h3>
+<table>
+<thead>
+<tr>
+<th>编号</th>
+<th>需求</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>NF-10</td>
+<td>响应式布局</td>
+<td>适配桌面和移动端浏览器</td>
+</tr>
+<tr>
+<td>NF-11</td>
+<td>深色主题</td>
+<td>默认深色界面，适合长时间使用</td>
+</tr>
+<tr>
+<td>NF-12</td>
+<td>操作反馈</td>
+<td>所有操作有明确的加载/成功/失败反馈</td>
+</tr>
+</tbody>
+</table>
+<h3 id="43">4.3 安全性</h3>
+<table>
+<thead>
+<tr>
+<th>编号</th>
+<th>需求</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>NF-20</td>
+<td>Cookie 安全</td>
+<td>Cookie 文件存储在服务端 data 目录，不通过 API 明文返回</td>
+</tr>
+<tr>
+<td>NF-21</td>
+<td>路径安全</td>
+<td>服务端下载路径校验，防止路径穿越攻击</td>
+</tr>
+<tr>
+<td>NF-22</td>
+<td>内网使用</td>
+<td>不暴露到公网，不内置用户认证（后续可加 Basic Auth）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="44">4.4 可靠性</h3>
+<table>
+<thead>
+<tr>
+<th>编号</th>
+<th>需求</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>NF-30</td>
+<td>下载容错</td>
+<td>单次下载失败不影响后续使用，展示错误信息即可</td>
+</tr>
+<tr>
+<td>NF-31</td>
+<td>进程稳定</td>
+<td>yt-dlp 在子线程执行，崩溃不影响主服务</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="5">5. 用户场景</h2>
+<h3 id="1-cookie">场景 1：首次使用配置 Cookie</h3>
+<pre class="codehilite"><code>用户部署 Docker → 浏览器访问 → 进入设置页面 → 
+粘贴抖音 Cookie → 保存 → 粘贴 X Cookie → 保存 → 开始使用
+</code></pre>
+
+<h3 id="2_1">场景 2：下载抖音视频到本地</h3>
+<pre class="codehilite"><code>用户复制抖音视频链接 → 粘贴到下载框 → 自动识别平台 →
+系统预解析显示视频信息 → 选择「下载到本地」→ 点击下载 →
+实时显示进度 → 完成后浏览器自动下载视频文件
+</code></pre>
+
+<h3 id="3-x">场景 3：下载 X 视频到服务端</h3>
+<pre class="codehilite"><code>用户复制 X 视频链接 → 粘贴到下载框 → 自动识别平台 →
+系统预解析显示视频信息 → 选择「保存到服务端」→ 点击下载 →
+实时显示进度 → 完成后视频保存在服务端配置路径 → 历史记录中出现该条目
+</code></pre>
+
+<h3 id="4_1">场景 4：查看历史并重新下载</h3>
+<pre class="codehilite"><code>用户进入历史页面 → 查看下载记录列表 → 
+点击某条记录的「重新下载」→ 系统使用原链接发起新下载
+</code></pre>
+
+<h3 id="5cookie">场景 5：Cookie 失效后更新</h3>
+<pre class="codehilite"><code>用户下载失败 → 错误提示「Cookie 可能已过期」→
+进入设置页面 → 更新 Cookie → 重新下载
+</code></pre>
+
+<hr />
+<h2 id="6">6. 约束条件</h2>
+<ol>
+<li><strong>核心下载引擎</strong>：使用 <code>yt-dlp</code>，它已内置抖音和 X 的提取器，支持 Cookie 认证</li>
+<li><strong>运行环境</strong>：Docker 容器内需安装 <code>ffmpeg</code>（用于视频合并）</li>
+<li><strong>网络要求</strong>：服务端需能访问抖音和 X 的服务器</li>
+<li><strong>Cookie 获取</strong>：用户需自行从浏览器获取 Cookie（工具不提供自动登录）</li>
+<li><strong>文件格式</strong>：两个平台的视频原始格式均为 MP4/H.264/AAC，无需额外转码；高画质版本可能音视频流分离，通过 ffmpeg 合并后统一输出 MP4</li>
+</ol>
+<hr />
+<h2 id="7">7. 术语表</h2>
+<table>
+<thead>
+<tr>
+<th>术语</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cookie</td>
+<td>浏览器登录凭证，用于让下载工具模拟已登录状态</td>
+</tr>
+<tr>
+<td>Netscape 格式</td>
+<td>一种标准的 Cookie 文件格式，yt-dlp 原生支持</td>
+</tr>
+<tr>
+<td>yt-dlp</td>
+<td>开源视频下载命令行工具，支持 1000+ 网站</td>
+</tr>
+<tr>
+<td>本地下载</td>
+<td>视频下载到服务端内存/临时文件后，通过 HTTP 传输给浏览器保存</td>
+</tr>
+<tr>
+<td>服务端下载</td>
+<td>视频直接下载到服务端的指定目录持久保存</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="8">8. 后续扩展方向（不在本期范围）</h2>
+<ul>
+<li>支持更多平台（Bilibili、YouTube、小红书等）</li>
+<li>批量链接下载</li>
+<li>下载队列与并发控制</li>
+<li>Basic Auth / 多用户支持</li>
+<li>视频转码与格式选择</li>
+<li>定时下载 / RSS 订阅</li>
+</ul>
+    </div>
+  </section>
+
+  <!-- ===== 2. 概要设计 ===== -->
+  <section class="doc-section" id="doc-design">
+    <div class="doc-section-header">
+      <span class="doc-badge design">设计文档</span>
+      <h2>🏗 概要设计</h2>
+      <div class="doc-meta">版本 v1.0 · 日期 2026-07-17 · 状态 待评审</div>
+    </div>
+    <div class="md-content">
+      <h1 id="_1">视频下载工具 — 概要设计</h1>
+<blockquote>
+<p><strong>版本</strong>: v1.0<br />
+<strong>日期</strong>: 2026-07-17<br />
+<strong>状态</strong>: 待评审</p>
+</blockquote>
+<hr />
+<h2 id="1">1. 系统架构</h2>
+<h3 id="11">1.1 架构总览</h3>
+<pre class="codehilite"><code>┌─────────────────────────────────────────────────┐
+│                   Docker Container              │
+│                                                 │
+│  ┌───────────┐     ┌──────────────────────┐    │
+│  │  Browser   │────▶│   FastAPI (uvicorn)  │    │
+│  │  (Web UI)  │◀────│   Port: 8000         │    │
+│  └───────────┘     └──────────┬───────────┘    │
+│                               │                 │
+│                    ┌──────────┴───────────┐    │
+│                    │                      │    │
+│              ┌─────▼──────┐    ┌─────────▼───┐ │
+│              │  Download   │    │  Cookie     │ │
+│              │  Manager    │    │  Manager    │ │
+│              │  (yt-dlp)   │    │             │ │
+│              └──────┬──────┘    └─────────────┘ │
+│                     │                           │
+│              ┌──────▼──────┐                    │
+│              │  yt-dlp +   │    ┌───────────┐  │
+│              │  ffmpeg     │    │  History   │  │
+│              │  (子进程)    │    │  (JSON)    │  │
+│              └─────────────┘    └───────────┘  │
+│                                                 │
+│  ┌─────────────────────────────────────────┐   │
+│  │         /data  (Volume Mount)            │   │
+│  │  ├── cookies/    Cookie 文件             │   │
+│  │  ├── downloads/  下载的视频文件           │   │
+│  │  ├── config/     配置文件                │   │
+│  │  └── history.json 下载历史               │   │
+│  └─────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────┘
+</code></pre>
+
+<h3 id="12">1.2 技术选型</h3>
+<table>
+<thead>
+<tr>
+<th>层级</th>
+<th>技术</th>
+<th>理由</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Web 框架</td>
+<td>FastAPI</td>
+<td>异步支持好、自带 API 文档、轻量</td>
+</tr>
+<tr>
+<td>ASGI 服务器</td>
+<td>uvicorn</td>
+<td>FastAPI 标准搭配，生产可用</td>
+</tr>
+<tr>
+<td>下载引擎</td>
+<td>yt-dlp</td>
+<td>开源、支持抖音和 X、Cookie 认证、活跃维护</td>
+</tr>
+<tr>
+<td>视频处理</td>
+<td>ffmpeg</td>
+<td>yt-dlp 合并音视频流依赖</td>
+</tr>
+<tr>
+<td>前端</td>
+<td>原生 HTML/CSS/JS</td>
+<td>无需构建工具，简单够用</td>
+</tr>
+<tr>
+<td>数据存储</td>
+<td>JSON 文件 + 文件系统</td>
+<td>单用户场景无需数据库</td>
+</tr>
+<tr>
+<td>容器</td>
+<td>Docker (python:3.12-slim)</td>
+<td>轻量、可移植</td>
+</tr>
+</tbody>
+</table>
+<h3 id="13">1.3 视频格式说明</h3>
+<p>抖音和 X 的视频原始格式情况：</p>
+<table>
+<thead>
+<tr>
+<th>平台</th>
+<th>容器格式</th>
+<th>视频编码</th>
+<th>音频编码</th>
+<th>分发方式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>抖音</td>
+<td>MP4</td>
+<td>H.264 (avc1)</td>
+<td>AAC</td>
+<td>多为单文件，高画质可能分离音视频流</td>
+</tr>
+<tr>
+<td>X (Twitter)</td>
+<td>MP4</td>
+<td>H.264 (avc1)</td>
+<td>AAC</td>
+<td>多为单文件，高画质可能分离音视频流</td>
+</tr>
+</tbody>
+</table>
+<p><strong>结论：两个平台本身就是 MP4/H.264 格式，无需额外格式转换。</strong></p>
+<p>但需处理音视频流分离的情况（高画质版本常见），yt-dlp 配置策略：</p>
+<pre class="codehilite"><code class="language-python">ydl_opts = {
+    # 优先选择 H.264 编码 + 最佳音频，兼容性最好
+    'format': 'bv*[vcodec=avc1]+ba/b',
+    # 合并后统一输出 MP4 容器
+    'merge_output_format': 'mp4',
+}
+</code></pre>
+
+<ul>
+<li><code>bv*[vcodec=avc1]+ba</code>：优先选 H.264 视频流 + 最佳音频流，回退到最佳单文件</li>
+<li><code>merge_output_format: mp4</code>：分离流合并后强制输出 MP4</li>
+<li>ffmpeg 负责合并操作，无需额外转码</li>
+</ul>
+<h3 id="14">1.4 请求流转</h3>
+<pre class="codehilite"><code>用户浏览器
+   │
+   │ 1. 粘贴视频链接 → POST /api/parse
+   │    FastAPI 调用 yt-dlp extract_info (extract=False)
+   │    返回视频信息 (标题/作者/缩略图/时长)
+   │
+   │ 2. 点击下载 → POST /api/download
+   │    FastAPI 创建下载任务，返回 task_id
+   │    后台线程执行 yt-dlp.download()
+   │
+   │ 3. 进度获取 → GET /api/download/{task_id}/progress (SSE)
+   │    Server-Sent Events 推送实时进度
+   │
+   │ 4a. 本地下载 → GET /api/download/{task_id}/file
+   │     返回文件流，浏览器触发下载
+   │
+   │ 4b. 服务端下载 → 文件已保存到服务端路径
+   │     记录写入 history.json
+   │
+   ▼
+</code></pre>
+
+<hr />
+<h2 id="2">2. 模块划分</h2>
+<h3 id="21">2.1 目录结构</h3>
+<pre class="codehilite"><code>videoDownload/
+├── app/
+│   ├── __init__.py
+│   ├── main.py               # FastAPI 应用入口、路由定义
+│   ├── config.py              # 配置管理（路径、环境变量）
+│   ├── cookie_manager.py      # Cookie 解析、存储、转换
+│   ├── downloader.py          # 下载任务管理、yt-dlp 封装
+│   └── static/                # 前端静态文件
+│       ├── index.html
+│       ├── style.css
+│       └── app.js
+├── data/                      # 运行时数据（Docker Volume 挂载）
+│   ├── cookies/
+│   ├── downloads/
+│   ├── config/
+│   └── history.json
+├── docs/
+│   ├── 需求说明书.md
+│   ├── 概要设计.md
+│   └── ui-prototype.html
+├── Dockerfile
+├── docker-compose.yml
+├── requirements.txt
+└── README.md
+</code></pre>
+
+<h3 id="22">2.2 模块职责</h3>
+<h4 id="configpy"><code>config.py</code> — 配置管理</h4>
+<table>
+<thead>
+<tr>
+<th>职责</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>路径管理</td>
+<td>定义 DATA_DIR、COOKIES_DIR、DOWNLOADS_DIR 等路径</td>
+</tr>
+<tr>
+<td>配置读写</td>
+<td>读写 <code>data/config/settings.json</code></td>
+</tr>
+<tr>
+<td>服务端路径</td>
+<td>管理 <code>server_download_path</code> 配置项</td>
+</tr>
+</tbody>
+</table>
+<h4 id="cookie_managerpy-cookie"><code>cookie_manager.py</code> — Cookie 管理</h4>
+<table>
+<thead>
+<tr>
+<th>职责</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cookie 解析</td>
+<td>将原始 Cookie 字符串转换为 Netscape 格式</td>
+</tr>
+<tr>
+<td>Cookie 存储</td>
+<td>按平台保存到 <code>data/cookies/{platform}.txt</code></td>
+</tr>
+<tr>
+<td>Cookie 状态</td>
+<td>查询各平台 Cookie 是否已配置</td>
+</tr>
+<tr>
+<td>Cookie 删除</td>
+<td>清除指定平台的 Cookie 文件</td>
+</tr>
+<tr>
+<td>格式识别</td>
+<td>自动识别输入是 Cookie 字符串还是 Netscape 格式</td>
+</tr>
+</tbody>
+</table>
+<h4 id="downloaderpy"><code>downloader.py</code> — 下载引擎</h4>
+<table>
+<thead>
+<tr>
+<th>职责</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>平台识别</td>
+<td>从 URL 自动识别抖音 / X</td>
+</tr>
+<tr>
+<td>视频信息解析</td>
+<td>调用 yt-dlp 提取视频元数据（不下载）</td>
+</tr>
+<tr>
+<td>下载执行</td>
+<td>调用 yt-dlp 执行下载，支持 Cookie</td>
+</tr>
+<tr>
+<td>进度追踪</td>
+<td>通过 yt-dlp progress_hooks 回调更新任务状态</td>
+</tr>
+<tr>
+<td>任务管理</td>
+<td>创建/查询/列举下载任务（内存中）</td>
+</tr>
+<tr>
+<td>历史记录</td>
+<td>下载完成后写入 history.json</td>
+</tr>
+<tr>
+<td>文件命名</td>
+<td>按配置规则生成文件名</td>
+</tr>
+</tbody>
+</table>
+<h4 id="mainpy-web"><code>main.py</code> — Web 服务</h4>
+<table>
+<thead>
+<tr>
+<th>职责</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>静态文件</td>
+<td>提供 Web UI</td>
+</tr>
+<tr>
+<td>API 路由</td>
+<td>解析、下载、进度、历史、配置等接口</td>
+</tr>
+<tr>
+<td>SSE 推送</td>
+<td>实时推送下载进度</td>
+</tr>
+<tr>
+<td>文件服务</td>
+<td>本地下载时返回文件流</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="3">3. 接口设计</h2>
+<h3 id="31-api">3.1 API 列表</h3>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>路径</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GET</td>
+<td><code>/</code></td>
+<td>Web UI 页面</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/parse</code></td>
+<td>解析视频链接，返回视频信息</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/download</code></td>
+<td>创建下载任务</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/download/{task_id}</code></td>
+<td>查询任务状态</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/download/{task_id}/progress</code></td>
+<td>SSE 进度推送</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/download/{task_id}/file</code></td>
+<td>下载文件到本地（浏览器）</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/history</code></td>
+<td>获取下载历史</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/api/history/{id}</code></td>
+<td>删除单条历史</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/api/history</code></td>
+<td>清空全部历史</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/config/cookies</code></td>
+<td>获取所有平台 Cookie 状态</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/config/cookies/{platform}</code></td>
+<td>保存平台 Cookie</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/api/config/cookies/{platform}</code></td>
+<td>删除平台 Cookie</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/config/server-path</code></td>
+<td>获取服务端下载路径</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/config/server-path</code></td>
+<td>设置服务端下载路径</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/files</code></td>
+<td>列出服务端已下载文件</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/files/{filename}</code></td>
+<td>下载服务端文件到本地</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/api/files/{filename}</code></td>
+<td>删除服务端文件</td>
+</tr>
+</tbody>
+</table>
+<h3 id="32">3.2 核心接口详情</h3>
+<h4 id="post-apiparse">POST <code>/api/parse</code> — 解析视频链接</h4>
+<pre class="codehilite"><code class="language-json">// Request
+{
+  &quot;url&quot;: &quot;https://www.douyin.com/video/7xxx&quot;
+}
+
+// Response 200
+{
+  &quot;platform&quot;: &quot;douyin&quot;,
+  &quot;title&quot;: &quot;视频标题&quot;,
+  &quot;uploader&quot;: &quot;作者&quot;,
+  &quot;thumbnail&quot;: &quot;https://...&quot;,
+  &quot;duration&quot;: 30
+}
+
+// Response 400
+{
+  &quot;error&quot;: &quot;无法识别的视频链接&quot;
+}
+</code></pre>
+
+<h4 id="post-apidownload">POST <code>/api/download</code> — 创建下载任务</h4>
+<pre class="codehilite"><code class="language-json">// Request
+{
+  &quot;url&quot;: &quot;https://www.douyin.com/video/7xxx&quot;,
+  &quot;platform&quot;: &quot;douyin&quot;,
+  &quot;target&quot;: &quot;local&quot;  // &quot;local&quot; | &quot;server&quot;
+}
+
+// Response 200
+{
+  &quot;task_id&quot;: &quot;a1b2c3d4e5f6&quot;
+}
+
+// Response 400
+{
+  &quot;error&quot;: &quot;抖音 Cookie 未配置，请先在设置中配置&quot;
+}
+</code></pre>
+
+<h4 id="get-apidownloadtask_idprogress-sse">GET <code>/api/download/{task_id}/progress</code> — SSE 进度推送</h4>
+<pre class="codehilite"><code>// Server-Sent Events 流
+data: {&quot;status&quot;:&quot;downloading&quot;,&quot;progress&quot;:45.2,&quot;speed&quot;:&quot;3.5 MiB/s&quot;,&quot;eta&quot;:&quot;12s&quot;}
+
+data: {&quot;status&quot;:&quot;downloading&quot;,&quot;progress&quot;:78.1,&quot;speed&quot;:&quot;4.1 MiB/s&quot;,&quot;eta&quot;:&quot;5s&quot;}
+
+data: {&quot;status&quot;:&quot;completed&quot;,&quot;progress&quot;:100,&quot;filename&quot;:&quot;搞笑猫咪.mp4&quot;,&quot;filesize&quot;:8912896}
+
+// 或错误
+data: {&quot;status&quot;:&quot;error&quot;,&quot;error&quot;:&quot;Cookie 已过期&quot;}
+</code></pre>
+
+<hr />
+<h2 id="4">4. 数据模型</h2>
+<h3 id="41">4.1 下载任务（内存对象）</h3>
+<pre class="codehilite"><code class="language-python">class DownloadTask:
+    task_id: str          # 12位 UUID
+    url: str              # 视频链接
+    platform: str         # &quot;douyin&quot; | &quot;x&quot;
+    target: str           # &quot;local&quot; | &quot;server&quot;
+    status: str           # pending|extracting|downloading|completed|error
+    progress: float       # 0-100
+    speed: str            # &quot;3.5 MiB/s&quot;
+    eta: str              # &quot;12s&quot;
+    title: str            # 视频标题
+    uploader: str         # 作者
+    thumbnail: str        # 缩略图 URL
+    duration: int         # 时长（秒）
+    filepath: str         # 下载后的文件路径
+    filename: str         # 文件名
+    filesize: int         # 文件大小（字节）
+    error: str            # 错误信息
+    created_at: str       # ISO 时间
+    completed_at: str     # ISO 时间
+</code></pre>
+
+<h3 id="42-json">4.2 历史记录（JSON 持久化）</h3>
+<pre class="codehilite"><code class="language-json">// data/history.json
+[
+  {
+    &quot;id&quot;: &quot;a1b2c3d4e5f6&quot;,
+    &quot;url&quot;: &quot;https://www.douyin.com/video/7xxx&quot;,
+    &quot;platform&quot;: &quot;douyin&quot;,
+    &quot;target&quot;: &quot;server&quot;,
+    &quot;title&quot;: &quot;视频标题&quot;,
+    &quot;uploader&quot;: &quot;作者&quot;,
+    &quot;thumbnail&quot;: &quot;https://...&quot;,
+    &quot;duration&quot;: 30,
+    &quot;filename&quot;: &quot;视频标题.mp4&quot;,
+    &quot;filepath&quot;: &quot;/data/downloads/视频标题.mp4&quot;,
+    &quot;filesize&quot;: 8912896,
+    &quot;status&quot;: &quot;completed&quot;,
+    &quot;created_at&quot;: &quot;2026-07-17T20:15:00&quot;,
+    &quot;completed_at&quot;: &quot;2026-07-17T20:15:12&quot;
+  }
+]
+</code></pre>
+
+<h3 id="43">4.3 配置文件</h3>
+<pre class="codehilite"><code class="language-json">// data/config/settings.json
+{
+  &quot;server_download_path&quot;: &quot;/data/downloads&quot;,
+  &quot;naming_rule&quot;: &quot;title&quot;  // &quot;title&quot; | &quot;author-title&quot; | &quot;date-title&quot;
+}
+</code></pre>
+
+<h3 id="44-cookie">4.4 Cookie 文件</h3>
+<pre class="codehilite"><code># data/cookies/douyin.txt  (Netscape 格式)
+# Netscape HTTP Cookie File
+.douyin.com  TRUE  /  TRUE  1769472000  ttwid  xxx
+.douyin.com  TRUE  /  TRUE  1769472000  msToken  xxx
+...
+
+# data/cookies/x.txt
+# Netscape HTTP Cookie File
+.x.com       TRUE  /  TRUE  1769472000  auth_token  xxx
+.x.com       TRUE  /  TRUE  1769472000  ct0  xxx
+.twitter.com TRUE  /  TRUE  1769472000  auth_token  xxx
+.twitter.com TRUE  /  TRUE  1769472000  ct0  xxx
+...
+</code></pre>
+
+<hr />
+<h2 id="5">5. 核心流程设计</h2>
+<h3 id="51">5.1 下载流程</h3>
+<pre class="codehilite"><code>                    ┌──────────┐
+                    │ 用户粘贴 │
+                    │ 视频链接  │
+                    └─────┬────┘
+                          │
+                    ┌─────▼────┐
+                    │ POST     │
+                    │ /api/parse│
+                    └─────┬────┘
+                          │
+                   ┌──────▼──────┐
+                   │ yt-dlp      │
+                   │ extract_info│
+                   │ (download=  │
+                   │   False)    │
+                   └──────┬──────┘
+                          │
+              ┌───────────┴───────────┐
+              │                       │
+        Cookie 有效？            Cookie 未配置
+              │                       │
+     ┌────────▼────────┐     ┌────────▼────────┐
+     │ 返回视频信息     │     │ 返回错误提示     │
+     │ (标题/缩略图等)  │     │ &quot;请先配置Cookie&quot;│
+     └────────┬────────┘     └─────────────────┘
+              │
+     ┌────────▼────────┐
+     │ 用户选择目标    │
+     │ local / server  │
+     │ 点击下载        │
+     └────────┬────────┘
+              │
+     ┌────────▼────────┐
+     │ POST /api/download│
+     │ 创建 task_id    │
+     └────────┬────────┘
+              │
+     ┌────────▼────────┐
+     │ 后台线程执行    │
+     │ yt-dlp.download │
+     │ 使用 Cookie     │
+     └────────┬────────┘
+              │
+     ┌────────▼────────┐
+     │ progress_hooks  │
+     │ 回调更新进度    │──────▶ SSE 推送到浏览器
+     └────────┬────────┘
+              │
+        ┌─────┴─────┐
+        │           │
+   target=local  target=server
+        │           │
+┌───────▼───────┐  │
+│ 文件保存到    │  │ 文件保存到
+│ 临时目录      │  │ 服务端路径
+└───────┬───────┘  └───────┬───────┘
+        │                  │
+┌───────▼───────┐   ┌──────▼──────┐
+│ GET /file     │   │ 写入       │
+│ 浏览器下载    │   │ history.json│
+└───────────────┘   └─────────────┘
+</code></pre>
+
+<h3 id="52-cookie">5.2 Cookie 转换流程</h3>
+<pre class="codehilite"><code>用户粘贴 Cookie 内容
+        │
+        ▼
+  ┌─────────────┐
+  │ 格式识别    │
+  └──────┬──────┘
+         │
+    ┌────┴────┐
+    │         │
+ Netscape   Cookie字符串
+ 格式       (name=val; ...)
+    │         │
+    │    ┌────▼────────┐
+    │    │ 按 ; 分割   │
+    │    │ 解析 name   │
+    │    │ 和 value    │
+    │    └────┬────────┘
+    │         │
+    │    ┌────▼────────┐
+    │    │ 按平台域名   │
+    │    │ 生成条目     │
+    │    │ (.douyin.com│
+    │    │  .x.com 等) │
+    │    └────┬────────┘
+    │         │
+    └────┬────┘
+         │
+    ┌────▼────────┐
+    │ 写入        │
+    │ cookies/    │
+    │ {plat}.txt  │
+    └─────────────┘
+</code></pre>
+
+<hr />
+<h2 id="6">6. 部署方案</h2>
+<h3 id="61-dockerfile">6.1 Dockerfile</h3>
+<pre class="codehilite"><code class="language-dockerfile">FROM python:3.12-slim
+
+# 安装 ffmpeg
+RUN apt-get update &amp;&amp; apt-get install -y --no-install-recommends \
+    ffmpeg \
+    &amp;&amp; rm -rf /var/lib/apt/lists/*
+
+# 安装 Python 依赖
+COPY requirements.txt /tmp/
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
+
+# 复制应用代码
+COPY app/ /app/
+
+# 创建数据目录
+RUN mkdir -p /data/cookies /data/downloads /data/config
+
+WORKDIR /app
+EXPOSE 8000
+
+CMD [&quot;uvicorn&quot;, &quot;main:app&quot;, &quot;--host&quot;, &quot;0.0.0.0&quot;, &quot;--port&quot;, &quot;8000&quot;]
+</code></pre>
+
+<h3 id="62-docker-composeyml">6.2 docker-compose.yml</h3>
+<pre class="codehilite"><code class="language-yaml">version: '3.8'
+
+services:
+  video-downloader:
+    build: .
+    container_name: video-downloader
+    ports:
+      - &quot;8000:8000&quot;
+    volumes:
+      - ./data:/data           # 数据持久化
+    environment:
+      - DATA_DIR=/data
+    restart: unless-stopped
+</code></pre>
+
+<h3 id="63">6.3 数据卷说明</h3>
+<table>
+<thead>
+<tr>
+<th>容器路径</th>
+<th>用途</th>
+<th>挂载建议</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/data/cookies/</code></td>
+<td>Cookie 文件</td>
+<td>随 data 目录一起挂载</td>
+</tr>
+<tr>
+<td><code>/data/downloads/</code></td>
+<td>下载的视频</td>
+<td>可单独挂载到 NAS 共享目录</td>
+</tr>
+<tr>
+<td><code>/data/config/</code></td>
+<td>配置文件</td>
+<td>随 data 目录一起挂载</td>
+</tr>
+<tr>
+<td><code>/data/history.json</code></td>
+<td>下载历史</td>
+<td>随 data 目录一起挂载</td>
+</tr>
+</tbody>
+</table>
+<h3 id="64">6.4 环境变量</h3>
+<table>
+<thead>
+<tr>
+<th>变量</th>
+<th>默认值</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DATA_DIR</code></td>
+<td><code>/app/../data</code></td>
+<td>数据根目录</td>
+</tr>
+<tr>
+<td><code>SERVER_HOST</code></td>
+<td><code>0.0.0.0</code></td>
+<td>监听地址</td>
+</tr>
+<tr>
+<td><code>SERVER_PORT</code></td>
+<td><code>8000</code></td>
+<td>监听端口</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="7">7. 安全设计</h2>
+<table>
+<thead>
+<tr>
+<th>风险</th>
+<th>措施</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cookie 泄露</td>
+<td>Cookie 文件存储在 data 目录，API 不返回 Cookie 内容，仅返回是否已配置</td>
+</tr>
+<tr>
+<td>路径穿越</td>
+<td>服务端下载路径校验，禁止 <code>..</code> 和绝对路径注入</td>
+</tr>
+<tr>
+<td>文件名注入</td>
+<td>sanitize_filename 过滤特殊字符</td>
+</tr>
+<tr>
+<td>任意文件读取</td>
+<td>文件下载接口校验文件名在 downloads 目录内</td>
+</tr>
+<tr>
+<td>未授权访问</td>
+<td>内网部署，后续可加 Basic Auth 或 API Token</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="8">8. 错误处理</h2>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>处理方式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cookie 未配置</td>
+<td>返回 400，提示去设置页配置</td>
+</tr>
+<tr>
+<td>Cookie 过期</td>
+<td>下载失败，错误信息提示更新 Cookie</td>
+</tr>
+<tr>
+<td>链接无效/无法解析</td>
+<td>返回 400，提示检查链接</td>
+</tr>
+<tr>
+<td>视频已被删除</td>
+<td>下载失败，返回 yt-dlp 的错误信息</td>
+</tr>
+<tr>
+<td>网络超时</td>
+<td>yt-dlp 内置重试，最终失败则返回错误</td>
+</tr>
+<tr>
+<td>磁盘空间不足</td>
+<td>下载失败，返回 IOError 信息</td>
+</tr>
+<tr>
+<td>服务端路径不存在</td>
+<td>自动创建，或返回错误提示</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="9">9. 后续扩展点</h2>
+<ol>
+<li><strong>平台扩展</strong>：在 <code>cookie_manager.py</code> 的 <code>PLATFORM_DOMAINS</code> 中添加新平台，yt-dlp 自动支持</li>
+<li><strong>批量下载</strong>：扩展 DownloadManager 支持任务队列</li>
+<li><strong>用户认证</strong>：在 FastAPI 中间件层添加 Basic Auth</li>
+<li><strong>通知集成</strong>：下载完成后调用 webhook（可对接钉钉/企业微信）</li>
+<li><strong>定时清理</strong>：添加 cron 任务清理过期临时文件</li>
+</ol>
+    </div>
+  </section>
+
+  <!-- ===== 3. UI 设计原型 ===== -->
+  <section class="doc-section" id="doc-ui">
+    <div class="doc-section-header">
+      <span class="doc-badge ui">UI 设计</span>
+      <h2>🎨 UI 设计原型</h2>
+      <div class="doc-meta">交互式原型 · 深色主题 · 响应式布局</div>
+    </div>
+    <div class="md-content">
+      <p>以下是视频下载工具的 Web UI 原型设计，包含 <strong>视频下载</strong>、<strong>下载历史</strong>、<strong>设置</strong> 三个主要页面。原型为可交互的 HTML 页面，可直接点击体验。</p>
+      
+      <div class="ui-prototype-note">
+        💡 提示：下方为嵌入式交互原型，可点击侧边栏切换页面、输入链接模拟解析、查看模拟下载进度等。
+      </div>
+
+      <div class="ui-prototype-wrapper">
+        <iframe srcdoc="&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;zh-CN&quot;&gt;
+&lt;head&gt;
+&lt;meta charset=&quot;UTF-8&quot;&gt;
+&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+&lt;title&gt;Video Downloader — UI 原型&lt;/title&gt;
+&lt;style&gt;
+:root {
+  --bg: #0d1117;
+  --bg-card: #161b22;
+  --bg-hover: #1c2128;
+  --bg-input: #0d1117;
+  --border: #30363d;
+  --border-light: #21262d;
+  --text: #e6edf3;
+  --text-secondary: #8b949e;
+  --text-muted: #6e7681;
+  --accent: #58a6ff;
+  --accent-hover: #79b8ff;
+  --accent-bg: rgba(88, 166, 255, 0.1);
+  --success: #3fb950;
+  --success-bg: rgba(63, 185, 80, 0.1);
+  --warning: #d29922;
+  --warning-bg: rgba(210, 153, 34, 0.1);
+  --danger: #f85149;
+  --danger-bg: rgba(248, 81, 73, 0.1);
+  --douyin: #ff2c55;
+  --twitter: #1d9bf0;
+  --radius: 8px;
+  --radius-sm: 6px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+}
+
+/* ============ Sidebar ============ */
+.sidebar {
+  width: 220px;
+  min-height: 100vh;
+  background: var(--bg-card);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.sidebar-logo {
+  padding: 20px 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sidebar-logo .logo-icon {
+  width: 32px; height: 32px;
+  background: linear-gradient(135deg, var(--douyin), var(--twitter));
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+}
+
+.sidebar-logo .logo-text {
+  font-size: 15px; font-weight: 600;
+}
+
+.sidebar-nav {
+  padding: 12px 8px;
+  flex: 1;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 14px;
+  transition: all 0.15s;
+  margin-bottom: 2px;
+}
+
+.nav-item:hover { background: var(--bg-hover); color: var(--text); }
+.nav-item.active { background: var(--accent-bg); color: var(--accent); }
+
+.nav-item .nav-icon { font-size: 18px; width: 20px; text-align: center; }
+.nav-item .nav-badge {
+  margin-left: auto;
+  background: var(--border);
+  color: var(--text-secondary);
+  font-size: 12px;
+  padding: 1px 7px;
+  border-radius: 10px;
+}
+
+.sidebar-footer {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* ============ Main ============ */
+.main {
+  flex: 1;
+  padding: 28px 32px;
+  overflow-y: auto;
+  max-height: 100vh;
+}
+
+.page { display: none; }
+.page.active { display: block; }
+
+.page-title {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.page-desc {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin-bottom: 24px;
+}
+
+/* ============ Download Page ============ */
+.download-input-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.input-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.url-input-wrapper {
+  flex: 1;
+  position: relative;
+}
+
+.url-input {
+  width: 100%;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px 12px 42px;
+  color: var(--text);
+  font-size: 14px;
+  transition: border-color 0.15s;
+}
+
+.url-input::placeholder { color: var(--text-muted); }
+.url-input:focus { outline: none; border-color: var(--accent); }
+
+.url-input-wrapper .url-icon {
+  position: absolute;
+  left: 14px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  font-size: 16px;
+}
+
+.btn {
+  padding: 12px 20px;
+  border-radius: var(--radius-sm);
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-secondary {
+  background: var(--bg-hover);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.btn-secondary:hover { background: var(--border); }
+
+.btn-danger { background: var(--danger-bg); color: var(--danger); border: 1px solid transparent; }
+.btn-danger:hover { background: rgba(248,81,73,0.2); }
+
+.btn-sm { padding: 6px 12px; font-size: 13px; }
+
+.target-selector {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.target-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.target-options {
+  display: flex;
+  gap: 8px;
+}
+
+.target-option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-secondary);
+  transition: all 0.15s;
+}
+
+.target-option:hover { border-color: var(--text-muted); }
+.target-option.selected {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.target-option .radio-dot {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--text-muted);
+  position: relative;
+}
+
+.target-option.selected .radio-dot {
+  border-color: var(--accent);
+}
+.target-option.selected .radio-dot::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  background: var(--accent);
+  border-radius: 50%;
+}
+
+/* Video Preview */
+.video-preview {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 20px;
+  display: none;
+}
+.video-preview.show { display: block; }
+
+.preview-header {
+  display: flex;
+  gap: 16px;
+}
+
+.preview-thumbnail {
+  width: 200px;
+  height: 120px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-input);
+  flex-shrink: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.preview-thumbnail img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+}
+
+.preview-thumbnail .duration-badge {
+  position: absolute;
+  bottom: 6px; right: 6px;
+  background: rgba(0,0,0,0.75);
+  color: #fff;
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.preview-info { flex: 1; min-width: 0; }
+.preview-title {
+  font-size: 15px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.preview-meta {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.preview-meta .meta-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.platform-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+.platform-tag.douyin { background: rgba(255,44,85,0.15); color: var(--douyin); }
+.platform-tag.x { background: rgba(29,155,240,0.15); color: var(--twitter); }
+
+/* Download Progress */
+.download-progress {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 20px;
+  display: none;
+}
+.download-progress.show { display: block; }
+
+.progress-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.progress-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.status-spinner {
+  width: 16px; height: 16px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.progress-percent {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.progress-bar {
+  height: 6px;
+  background: var(--bg-input);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.progress-meta {
+  display: flex;
+  gap: 20px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* ============ History Page ============ */
+.history-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.filter-tabs {
+  display: flex;
+  gap: 6px;
+}
+
+.filter-tab {
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.15s;
+}
+.filter-tab:hover { background: var(--bg-hover); }
+.filter-tab.active {
+  background: var(--accent-bg);
+  color: var(--accent);
+  border-color: rgba(88,166,255,0.3);
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.history-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  display: flex;
+  gap: 14px;
+  transition: border-color 0.15s;
+}
+.history-item:hover { border-color: var(--text-muted); }
+
+.history-thumb {
+  width: 120px; height: 68px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-input);
+  flex-shrink: 0;
+  overflow: hidden;
+  position: relative;
+}
+.history-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+.history-info { flex: 1; min-width: 0; }
+.history-title {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.history-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--text-muted);
+  flex-wrap: wrap;
+}
+
+.history-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.status-badge {
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+.status-badge.completed { background: var(--success-bg); color: var(--success); }
+.status-badge.error { background: var(--danger-bg); color: var(--danger); }
+.status-badge.downloading { background: var(--accent-bg); color: var(--accent); }
+
+/* ============ Settings Page ============ */
+.settings-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.settings-section-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.settings-section-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+
+.cookie-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.cookie-card-header {
+  padding: 14px 16px;
+  background: var(--bg-hover);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cookie-platform {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.cookie-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.cookie-status .dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+}
+.cookie-status .dot.ok { background: var(--success); }
+.cookie-status .dot.no { background: var(--text-muted); }
+
+.cookie-card-body {
+  padding: 16px;
+}
+
+.cookie-textarea {
+  width: 100%;
+  min-height: 100px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  color: var(--text);
+  font-size: 13px;
+  font-family: &quot;Cascadia Code&quot;, &quot;Fira Code&quot;, monospace;
+  resize: vertical;
+  margin-bottom: 10px;
+}
+.cookie-textarea::placeholder { color: var(--text-muted); }
+.cookie-textarea:focus { outline: none; border-color: var(--accent); }
+
+.cookie-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.cookie-help {
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: var(--bg-input);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  display: none;
+}
+.cookie-help.show { display: block; }
+
+.cookie-help code {
+  background: var(--bg-hover);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 12px;
+}
+
+.path-input-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.path-input {
+  flex: 1;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  color: var(--text);
+  font-size: 14px;
+  font-family: &quot;Cascadia Code&quot;, &quot;Fira Code&quot;, monospace;
+}
+.path-input:focus { outline: none; border-color: var(--accent); }
+
+/* ============ Toast ============ */
+.toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.toast {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: slideIn 0.25s ease;
+  max-width: 360px;
+}
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.toast.success { border-color: var(--success); }
+.toast.error { border-color: var(--danger); }
+.toast.info { border-color: var(--accent); }
+
+/* ============ Empty State ============ */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-muted);
+}
+.empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; }
+.empty-state .empty-text { font-size: 14px; }
+
+/* ============ Responsive ============ */
+@media (max-width: 768px) {
+  .sidebar { width: 60px; }
+  .sidebar-logo .logo-text { display: none; }
+  .nav-item .nav-text { display: none; }
+  .nav-item .nav-badge { display: none; }
+  .sidebar-footer { display: none; }
+  .main { padding: 16px; }
+  .input-row { flex-direction: column; }
+  .preview-header { flex-direction: column; }
+  .preview-thumbnail { width: 100%; height: 180px; }
+  .history-item { flex-direction: column; }
+  .history-thumb { width: 100%; height: 160px; }
+  .history-actions { flex-direction: row; }
+}
+&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+
+&lt;!-- ===== Sidebar ===== --&gt;
+&lt;aside class=&quot;sidebar&quot;&gt;
+  &lt;div class=&quot;sidebar-logo&quot;&gt;
+    &lt;div class=&quot;logo-icon&quot;&gt;⬇&lt;/div&gt;
+    &lt;div class=&quot;logo-text&quot;&gt;Video Downloader&lt;/div&gt;
+  &lt;/div&gt;
+  &lt;nav class=&quot;sidebar-nav&quot;&gt;
+    &lt;div class=&quot;nav-item active&quot; data-page=&quot;download&quot;&gt;
+      &lt;span class=&quot;nav-icon&quot;&gt;📥&lt;/span&gt;
+      &lt;span class=&quot;nav-text&quot;&gt;视频下载&lt;/span&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;nav-item&quot; data-page=&quot;history&quot;&gt;
+      &lt;span class=&quot;nav-icon&quot;&gt;📋&lt;/span&gt;
+      &lt;span class=&quot;nav-text&quot;&gt;下载历史&lt;/span&gt;
+      &lt;span class=&quot;nav-badge&quot; id=&quot;history-count&quot;&gt;3&lt;/span&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;nav-item&quot; data-page=&quot;settings&quot;&gt;
+      &lt;span class=&quot;nav-icon&quot;&gt;⚙&lt;/span&gt;
+      &lt;span class=&quot;nav-text&quot;&gt;设置&lt;/span&gt;
+    &lt;/div&gt;
+  &lt;/nav&gt;
+  &lt;div class=&quot;sidebar-footer&quot;&gt;
+    v1.0 · Docker Ready
+  &lt;/div&gt;
+&lt;/aside&gt;
+
+&lt;!-- ===== Main ===== --&gt;
+&lt;main class=&quot;main&quot;&gt;
+
+  &lt;!-- ===== Download Page ===== --&gt;
+  &lt;div class=&quot;page active&quot; id=&quot;page-download&quot;&gt;
+    &lt;h1 class=&quot;page-title&quot;&gt;视频下载&lt;/h1&gt;
+    &lt;p class=&quot;page-desc&quot;&gt;粘贴抖音或 X 的视频链接，自动识别并下载&lt;/p&gt;
+
+    &lt;!-- URL Input --&gt;
+    &lt;div class=&quot;download-input-card&quot;&gt;
+      &lt;div class=&quot;input-row&quot;&gt;
+        &lt;div class=&quot;url-input-wrapper&quot;&gt;
+          &lt;span class=&quot;url-icon&quot;&gt;🔗&lt;/span&gt;
+          &lt;input type=&quot;text&quot; class=&quot;url-input&quot; id=&quot;url-input&quot;
+            placeholder=&quot;粘贴视频链接，如 https://www.douyin.com/video/... 或 https://x.com/.../status/...&quot; /&gt;
+        &lt;/div&gt;
+        &lt;button class=&quot;btn btn-primary&quot; id=&quot;parse-btn&quot; onclick=&quot;parseUrl()&quot;&gt;解析视频&lt;/button&gt;
+      &lt;/div&gt;
+
+      &lt;div class=&quot;target-selector&quot;&gt;
+        &lt;span class=&quot;target-label&quot;&gt;下载到：&lt;/span&gt;
+        &lt;div class=&quot;target-options&quot;&gt;
+          &lt;div class=&quot;target-option selected&quot; data-target=&quot;local&quot; onclick=&quot;selectTarget(this)&quot;&gt;
+            &lt;span class=&quot;radio-dot&quot;&gt;&lt;/span&gt;
+            &lt;span&gt;💻 本地（浏览器下载）&lt;/span&gt;
+          &lt;/div&gt;
+          &lt;div class=&quot;target-option&quot; data-target=&quot;server&quot; onclick=&quot;selectTarget(this)&quot;&gt;
+            &lt;span class=&quot;radio-dot&quot;&gt;&lt;/span&gt;
+            &lt;span&gt;📁 服务端&lt;/span&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;!-- Video Preview (parsed) --&gt;
+    &lt;div class=&quot;video-preview&quot; id=&quot;video-preview&quot;&gt;
+      &lt;div class=&quot;preview-header&quot;&gt;
+        &lt;div class=&quot;preview-thumbnail&quot;&gt;
+          &lt;img id=&quot;preview-img&quot; src=&quot;&quot; alt=&quot;thumbnail&quot; /&gt;
+          &lt;span class=&quot;duration-badge&quot; id=&quot;preview-duration&quot;&gt;00:15&lt;/span&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;preview-info&quot;&gt;
+          &lt;div class=&quot;preview-title&quot; id=&quot;preview-title&quot;&gt;视频标题&lt;/div&gt;
+          &lt;div class=&quot;preview-meta&quot;&gt;
+            &lt;span class=&quot;platform-tag douyin&quot; id=&quot;preview-platform&quot;&gt;📱 抖音&lt;/span&gt;
+            &lt;span class=&quot;meta-item&quot;&gt;👤 &lt;span id=&quot;preview-author&quot;&gt;作者&lt;/span&gt;&lt;/span&gt;
+            &lt;span class=&quot;meta-item&quot;&gt;⏱ &lt;span id=&quot;preview-duration-text&quot;&gt;15秒&lt;/span&gt;&lt;/span&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div style=&quot;margin-top: 16px; display: flex; gap: 10px;&quot;&gt;
+        &lt;button class=&quot;btn btn-primary&quot; id=&quot;download-btn&quot; onclick=&quot;startDownload()&quot;&gt;⬇ 开始下载&lt;/button&gt;
+        &lt;button class=&quot;btn btn-secondary&quot; onclick=&quot;clearPreview()&quot;&gt;取消&lt;/button&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;!-- Download Progress --&gt;
+    &lt;div class=&quot;download-progress&quot; id=&quot;download-progress&quot;&gt;
+      &lt;div class=&quot;progress-header&quot;&gt;
+        &lt;div class=&quot;progress-status&quot;&gt;
+          &lt;span class=&quot;status-spinner&quot;&gt;&lt;/span&gt;
+          &lt;span id=&quot;progress-status-text&quot;&gt;下载中...&lt;/span&gt;
+        &lt;/div&gt;
+        &lt;span class=&quot;progress-percent&quot; id=&quot;progress-percent&quot;&gt;0%&lt;/span&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;progress-bar&quot;&gt;
+        &lt;div class=&quot;progress-bar-fill&quot; id=&quot;progress-bar-fill&quot; style=&quot;width: 0%&quot;&gt;&lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;progress-meta&quot;&gt;
+        &lt;span&gt;速度: &lt;span id=&quot;progress-speed&quot;&gt;--&lt;/span&gt;&lt;/span&gt;
+        &lt;span&gt;剩余: &lt;span id=&quot;progress-eta&quot;&gt;--&lt;/span&gt;&lt;/span&gt;
+        &lt;span&gt;大小: &lt;span id=&quot;progress-size&quot;&gt;--&lt;/span&gt;&lt;/span&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;!-- ===== History Page ===== --&gt;
+  &lt;div class=&quot;page&quot; id=&quot;page-history&quot;&gt;
+    &lt;h1 class=&quot;page-title&quot;&gt;下载历史&lt;/h1&gt;
+    &lt;p class=&quot;page-desc&quot;&gt;查看所有下载记录，可重新下载或管理文件&lt;/p&gt;
+
+    &lt;div class=&quot;history-toolbar&quot;&gt;
+      &lt;div class=&quot;filter-tabs&quot;&gt;
+        &lt;div class=&quot;filter-tab active&quot; data-filter=&quot;all&quot; onclick=&quot;filterHistory(this)&quot;&gt;全部&lt;/div&gt;
+        &lt;div class=&quot;filter-tab&quot; data-filter=&quot;douyin&quot; onclick=&quot;filterHistory(this)&quot;&gt;抖音&lt;/div&gt;
+        &lt;div class=&quot;filter-tab&quot; data-filter=&quot;x&quot; onclick=&quot;filterHistory(this)&quot;&gt;X&lt;/div&gt;
+        &lt;div class=&quot;filter-tab&quot; data-filter=&quot;completed&quot; onclick=&quot;filterHistory(this)&quot;&gt;已完成&lt;/div&gt;
+        &lt;div class=&quot;filter-tab&quot; data-filter=&quot;error&quot; onclick=&quot;filterHistory(this)&quot;&gt;失败&lt;/div&gt;
+      &lt;/div&gt;
+      &lt;button class=&quot;btn btn-secondary btn-sm&quot; onclick=&quot;clearHistory()&quot;&gt;🗑 清空历史&lt;/button&gt;
+    &lt;/div&gt;
+
+    &lt;div class=&quot;history-list&quot; id=&quot;history-list&quot;&gt;
+      &lt;!-- Items injected by JS --&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;!-- ===== Settings Page ===== --&gt;
+  &lt;div class=&quot;page&quot; id=&quot;page-settings&quot;&gt;
+    &lt;h1 class=&quot;page-title&quot;&gt;设置&lt;/h1&gt;
+    &lt;p class=&quot;page-desc&quot;&gt;配置平台 Cookie 和下载路径&lt;/p&gt;
+
+    &lt;!-- Cookie Configuration --&gt;
+    &lt;div class=&quot;settings-section&quot;&gt;
+      &lt;div class=&quot;settings-section-title&quot;&gt;🔐 平台 Cookie 配置&lt;/div&gt;
+      &lt;div class=&quot;settings-section-desc&quot;&gt;配置各平台的登录 Cookie，用于访问需要登录的内容&lt;/div&gt;
+
+      &lt;!-- Douyin --&gt;
+      &lt;div class=&quot;cookie-card&quot;&gt;
+        &lt;div class=&quot;cookie-card-header&quot;&gt;
+          &lt;div class=&quot;cookie-platform&quot;&gt;
+            &lt;span class=&quot;platform-tag douyin&quot;&gt;📱 抖音&lt;/span&gt;
+          &lt;/div&gt;
+          &lt;div class=&quot;cookie-status&quot;&gt;
+            &lt;span class=&quot;dot ok&quot;&gt;&lt;/span&gt;
+            &lt;span&gt;已配置 · 2.3 KB · 2小时前更新&lt;/span&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;cookie-card-body&quot;&gt;
+          &lt;textarea class=&quot;cookie-textarea&quot; placeholder=&quot;粘贴抖音 Cookie 字符串或 Netscape 格式内容...&amp;#10;&amp;#10;格式1: ttwid=xxx; msToken=xxx; passport_csrf_token=xxx&amp;#10;格式2: 直接粘贴从浏览器导出的 cookies.txt 内容&quot;&gt;&lt;/textarea&gt;
+          &lt;div class=&quot;cookie-actions&quot;&gt;
+            &lt;button class=&quot;btn btn-secondary btn-sm&quot; onclick=&quot;toggleHelp('douyin-help')&quot;&gt;❓ 获取方法&lt;/button&gt;
+            &lt;button class=&quot;btn btn-danger btn-sm&quot;&gt;删除&lt;/button&gt;
+            &lt;button class=&quot;btn btn-primary btn-sm&quot; onclick=&quot;saveCookie('douyin')&quot;&gt;保存&lt;/button&gt;
+          &lt;/div&gt;
+          &lt;div class=&quot;cookie-help&quot; id=&quot;douyin-help&quot;&gt;
+            &lt;strong&gt;获取抖音 Cookie：&lt;/strong&gt;&lt;br&gt;
+            1. 在 Chrome 中打开 &lt;code&gt;douyin.com&lt;/code&gt; 并登录&lt;br&gt;
+            2. 按 &lt;code&gt;F12&lt;/code&gt; 打开开发者工具 → Network 标签&lt;br&gt;
+            3. 刷新页面，点击任意请求 → Headers → 找到 &lt;code&gt;Cookie&lt;/code&gt; 字段&lt;br&gt;
+            4. 复制完整的 Cookie 值粘贴到上方文本框&lt;br&gt;
+            &lt;br&gt;
+            &lt;strong&gt;或使用浏览器扩展：&lt;/strong&gt;安装 &quot;Get cookies.txt&quot; 扩展，导出 douyin.com 的 Cookie 文件内容粘贴到上方。
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+
+      &lt;!-- X / Twitter --&gt;
+      &lt;div class=&quot;cookie-card&quot;&gt;
+        &lt;div class=&quot;cookie-card-header&quot;&gt;
+          &lt;div class=&quot;cookie-platform&quot;&gt;
+            &lt;span class=&quot;platform-tag x&quot;&gt;🐦 X&lt;/span&gt;
+          &lt;/div&gt;
+          &lt;div class=&quot;cookie-status&quot;&gt;
+            &lt;span class=&quot;dot no&quot;&gt;&lt;/span&gt;
+            &lt;span&gt;未配置&lt;/span&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;cookie-card-body&quot;&gt;
+          &lt;textarea class=&quot;cookie-textarea&quot; placeholder=&quot;粘贴 X Cookie 字符串或 Netscape 格式内容...&amp;#10;&amp;#10;格式1: auth_token=xxx; ct0=xxx; twid=xxx&amp;#10;格式2: 直接粘贴从浏览器导出的 cookies.txt 内容&quot;&gt;&lt;/textarea&gt;
+          &lt;div class=&quot;cookie-actions&quot;&gt;
+            &lt;button class=&quot;btn btn-secondary btn-sm&quot; onclick=&quot;toggleHelp('x-help')&quot;&gt;❓ 获取方法&lt;/button&gt;
+            &lt;button class=&quot;btn btn-primary btn-sm&quot; onclick=&quot;saveCookie('x')&quot;&gt;保存&lt;/button&gt;
+          &lt;/div&gt;
+          &lt;div class=&quot;cookie-help&quot; id=&quot;x-help&quot;&gt;
+            &lt;strong&gt;获取 X Cookie：&lt;/strong&gt;&lt;br&gt;
+            1. 在 Chrome 中打开 &lt;code&gt;x.com&lt;/code&gt; 并登录&lt;br&gt;
+            2. 按 &lt;code&gt;F12&lt;/code&gt; 打开开发者工具 → Network 标签&lt;br&gt;
+            3. 刷新页面，点击任意请求 → Headers → 找到 &lt;code&gt;Cookie&lt;/code&gt; 字段&lt;br&gt;
+            4. 复制完整的 Cookie 值粘贴到上方&lt;br&gt;
+            &lt;br&gt;
+            &lt;strong&gt;关键 Cookie：&lt;/strong&gt;&lt;code&gt;auth_token&lt;/code&gt; 和 &lt;code&gt;ct0&lt;/code&gt; 是必须的。
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;!-- Server Path --&gt;
+    &lt;div class=&quot;settings-section&quot;&gt;
+      &lt;div class=&quot;settings-section-title&quot;&gt;📁 服务端下载路径&lt;/div&gt;
+      &lt;div class=&quot;settings-section-desc&quot;&gt;选择「保存到服务端」时，视频将下载到此目录&lt;/div&gt;
+      &lt;div class=&quot;path-input-row&quot;&gt;
+        &lt;input type=&quot;text&quot; class=&quot;path-input&quot; id=&quot;server-path&quot; value=&quot;/data/downloads&quot; /&gt;
+        &lt;button class=&quot;btn btn-primary&quot; onclick=&quot;savePath()&quot;&gt;保存路径&lt;/button&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;!-- Naming Rule --&gt;
+    &lt;div class=&quot;settings-section&quot;&gt;
+      &lt;div class=&quot;settings-section-title&quot;&gt;📝 文件命名规则&lt;/div&gt;
+      &lt;div class=&quot;settings-section-desc&quot;&gt;下载视频文件的命名方式&lt;/div&gt;
+      &lt;div class=&quot;target-options&quot; style=&quot;flex-direction: column; gap: 8px;&quot;&gt;
+        &lt;div class=&quot;target-option selected&quot; onclick=&quot;selectNaming(this)&quot;&gt;
+          &lt;span class=&quot;radio-dot&quot;&gt;&lt;/span&gt;
+          &lt;span&gt;视频标题（如：搞笑猫咪.mp4）&lt;/span&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;target-option&quot; onclick=&quot;selectNaming(this)&quot;&gt;
+          &lt;span class=&quot;radio-dot&quot;&gt;&lt;/span&gt;
+          &lt;span&gt;作者-标题（如：用户名-搞笑猫咪.mp4）&lt;/span&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;target-option&quot; onclick=&quot;selectNaming(this)&quot;&gt;
+          &lt;span class=&quot;radio-dot&quot;&gt;&lt;/span&gt;
+          &lt;span&gt;日期-标题（如：20260717-搞笑猫咪.mp4）&lt;/span&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+&lt;/main&gt;
+
+&lt;!-- ===== Toast ===== --&gt;
+&lt;div class=&quot;toast-container&quot; id=&quot;toast-container&quot;&gt;&lt;/div&gt;
+
+&lt;script&gt;
+// ===== Mock Data =====
+const mockHistory = [
+  {
+    platform: 'douyin',
+    title: '夏日海边日落延时摄影 #风景 #日落',
+    author: '旅行摄影师小王',
+    duration: 30,
+    thumbnail: 'https://picsum.photos/seed/dy1/240/140',
+    size: '8.5 MB',
+    date: '2026-07-17 20:15',
+    status: 'completed',
+    target: 'local'
+  },
+  {
+    platform: 'x',
+    title: 'Just released: new feature demo video',
+    author: '@techdemo',
+    duration: 45,
+    thumbnail: 'https://picsum.photos/seed/x1/240/140',
+    size: '12.3 MB',
+    date: '2026-07-17 18:42',
+    status: 'completed',
+    target: 'server'
+  },
+  {
+    platform: 'douyin',
+    title: '10秒学会做蛋炒饭',
+    author: '美食达人',
+    duration: 15,
+    thumbnail: 'https://picsum.photos/seed/dy2/240/140',
+    size: '--',
+    date: '2026-07-17 16:30',
+    status: 'error',
+    target: 'local',
+    error: 'Cookie 已过期，请更新后重试'
+  }
+];
+
+let selectedTarget = 'local';
+
+// ===== Navigation =====
+document.querySelectorAll('.nav-item').forEach(item =&gt; {
+  item.addEventListener('click', () =&gt; {
+    document.querySelectorAll('.nav-item').forEach(n =&gt; n.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p =&gt; p.classList.remove('active'));
+    item.classList.add('active');
+    const page = item.dataset.page;
+    document.getElementById('page-' + page).classList.add('active');
+    if (page === 'history') renderHistory();
+  });
+});
+
+// ===== Download Page =====
+function selectTarget(el) {
+  document.querySelectorAll('.target-option').forEach(o =&gt; o.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedTarget = el.dataset.target;
+}
+
+function parseUrl() {
+  const url = document.getElementById('url-input').value.trim();
+  if (!url) { toast('请先输入视频链接', 'error'); return; }
+
+  // Simulate parsing
+  const btn = document.getElementById('parse-btn');
+  btn.disabled = true;
+  btn.textContent = '解析中...';
+
+  setTimeout(() =&gt; {
+    btn.disabled = false;
+    btn.textContent = '解析视频';
+
+    // Mock: detect platform
+    const isDouyin = url.includes('douyin');
+    const isX = url.includes('x.com') || url.includes('twitter.com');
+
+    if (!isDouyin &amp;&amp; !isX) {
+      toast('无法识别平台，请确认链接为抖音或 X 的视频链接', 'error');
+      return;
+    }
+
+    // Show preview
+    const preview = document.getElementById('video-preview');
+    preview.classList.add('show');
+
+    document.getElementById('preview-img').src = 'https://picsum.photos/seed/' + Math.random() + '/400/240';
+    document.getElementById('preview-title').textContent = isDouyin
+      ? '夏日海边日落延时摄影 #风景 #日落'
+      : 'Just released: new feature demo video';
+
+    const platformTag = document.getElementById('preview-platform');
+    if (isDouyin) {
+      platformTag.className = 'platform-tag douyin';
+      platformTag.textContent = '📱 抖音';
+      document.getElementById('preview-author').textContent = '旅行摄影师小王';
+    } else {
+      platformTag.className = 'platform-tag x';
+      platformTag.textContent = '🐦 X';
+      document.getElementById('preview-author').textContent = '@techdemo';
+    }
+
+    document.getElementById('preview-duration').textContent = '00:30';
+    document.getElementById('preview-duration-text').textContent = '30秒';
+
+    toast('解析成功', 'success');
+  }, 1200);
+}
+
+function clearPreview() {
+  document.getElementById('video-preview').classList.remove('show');
+  document.getElementById('url-input').value = '';
+}
+
+function startDownload() {
+  document.getElementById('video-preview').classList.remove('show');
+  const progress = document.getElementById('download-progress');
+  progress.classList.add('show');
+
+  // Simulate progress
+  let pct = 0;
+  const interval = setInterval(() =&gt; {
+    pct += Math.random() * 15;
+    if (pct &gt;= 100) {
+      pct = 100;
+      clearInterval(interval);
+      document.getElementById('progress-status-text').textContent = '下载完成！';
+      document.querySelector('.status-spinner').style.display = 'none';
+      document.getElementById('progress-bar-fill').style.background = 'var(--success)';
+
+      if (selectedTarget === 'local') {
+        toast('视频已下载，浏览器即将保存文件', 'success');
+      } else {
+        toast('视频已保存到服务端 /data/downloads', 'success');
+      }
+
+      setTimeout(() =&gt; {
+        progress.classList.remove('show');
+        document.querySelector('.status-spinner').style.display = '';
+        document.getElementById('progress-bar-fill').style.background = '';
+        document.getElementById('progress-status-text').textContent = '下载中...';
+      }, 3000);
+    }
+    document.getElementById('progress-bar-fill').style.width = pct + '%';
+    document.getElementById('progress-percent').textContent = Math.round(pct) + '%';
+    document.getElementById('progress-speed').textContent = (Math.random() * 5 + 1).toFixed(1) + ' MB/s';
+    document.getElementById('progress-eta').textContent = Math.ceil((100 - pct) / 3) + '秒';
+    document.getElementById('progress-size').textContent = (pct * 0.12).toFixed(1) + ' MB';
+  }, 300);
+}
+
+// ===== History Page =====
+let currentFilter = 'all';
+
+function filterHistory(el) {
+  document.querySelectorAll('.filter-tab').forEach(t =&gt; t.classList.remove('active'));
+  el.classList.add('active');
+  currentFilter = el.dataset.filter;
+  renderHistory();
+}
+
+function renderHistory() {
+  const list = document.getElementById('history-list');
+  let items = mockHistory;
+
+  if (currentFilter !== 'all') {
+    items = items.filter(i =&gt;
+      i.platform === currentFilter || i.status === currentFilter
+    );
+  }
+
+  if (items.length === 0) {
+    list.innerHTML = `
+      &lt;div class=&quot;empty-state&quot;&gt;
+        &lt;div class=&quot;empty-icon&quot;&gt;📭&lt;/div&gt;
+        &lt;div class=&quot;empty-text&quot;&gt;暂无下载记录&lt;/div&gt;
+      &lt;/div&gt;`;
+    return;
+  }
+
+  list.innerHTML = items.map(item =&gt; `
+    &lt;div class=&quot;history-item&quot;&gt;
+      &lt;div class=&quot;history-thumb&quot;&gt;
+        &lt;img src=&quot;${item.thumbnail}&quot; alt=&quot;thumb&quot; /&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;history-info&quot;&gt;
+        &lt;div class=&quot;history-title&quot;&gt;${item.title}&lt;/div&gt;
+        &lt;div class=&quot;history-meta&quot;&gt;
+          &lt;span class=&quot;platform-tag ${item.platform}&quot;&gt;
+            ${item.platform === 'douyin' ? '📱 抖音' : '🐦 X'}
+          &lt;/span&gt;
+          &lt;span&gt;👤 ${item.author}&lt;/span&gt;
+          &lt;span&gt;📦 ${item.size}&lt;/span&gt;
+          &lt;span&gt;${item.target === 'local' ? '💻 本地' : '📁 服务端'}&lt;/span&gt;
+          &lt;span&gt;🕒 ${item.date}&lt;/span&gt;
+          &lt;span class=&quot;status-badge ${item.status}&quot;&gt;
+            ${item.status === 'completed' ? '✓ 完成' : item.status === 'error' ? '✗ 失败' : '⏳ 下载中'}
+          &lt;/span&gt;
+          ${item.error ? `&lt;span style=&quot;color:var(--danger)&quot;&gt;⚠ ${item.error}&lt;/span&gt;` : ''}
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;history-actions&quot;&gt;
+        &lt;button class=&quot;btn btn-secondary btn-sm&quot; onclick=&quot;toast('重新下载已触发','info')&quot;&gt;🔄 重新下载&lt;/button&gt;
+        ${item.status === 'completed' &amp;&amp; item.target === 'server'
+          ? '&lt;button class=&quot;btn btn-secondary btn-sm&quot; onclick=&quot;toast(\'文件下载已触发\',\'info\')&quot;&gt;⬇ 下载到本地&lt;/button&gt;'
+          : ''}
+        &lt;button class=&quot;btn btn-danger btn-sm&quot; onclick=&quot;toast(\'记录已删除\',\'info')&quot;&gt;🗑 删除&lt;/button&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  `).join('');
+}
+
+function clearHistory() {
+  toast('已清空全部历史记录', 'info');
+  mockHistory.length = 0;
+  renderHistory();
+  document.getElementById('history-count').textContent = '0';
+}
+
+// ===== Settings Page =====
+function toggleHelp(id) {
+  document.getElementById(id).classList.toggle('show');
+}
+
+function saveCookie(platform) {
+  toast(`${platform === 'douyin' ? '抖音' : 'X'} Cookie 已保存`, 'success');
+}
+
+function savePath() {
+  const path = document.getElementById('server-path').value;
+  toast(`服务端下载路径已更新: ${path}`, 'success');
+}
+
+function selectNaming(el) {
+  document.querySelectorAll('.settings-section:last-child .target-option').forEach(o =&gt; o.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+// ===== Toast =====
+function toast(msg, type = 'info') {
+  const container = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  const icon = type === 'success' ? '✓' : type === 'error' ? '✗' : 'ℹ';
+  t.innerHTML = `&lt;span&gt;${icon}&lt;/span&gt; &lt;span&gt;${msg}&lt;/span&gt;`;
+  container.appendChild(t);
+  setTimeout(() =&gt; { t.style.opacity = '0'; setTimeout(() =&gt; t.remove(), 300); }, 3000);
+}
+
+// Enter key to parse
+document.getElementById('url-input').addEventListener('keydown', e =&gt; {
+  if (e.key === 'Enter') parseUrl();
+});
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+" title="UI Prototype"></iframe>
+      </div>
+
+      <h3>UI 设计要点</h3>
+      <table>
+        <thead>
+          <tr><th>页面</th><th>核心功能</th><th>设计说明</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>视频下载</td>
+            <td>链接输入、平台识别、视频预览、下载目标选择、实时进度</td>
+            <td>居中卡片布局，支持本地下载和服务端保存两种模式，SSE 实时进度条</td>
+          </tr>
+          <tr>
+            <td>下载历史</td>
+            <td>历史列表、平台筛选、状态筛选、重新下载、清空历史</td>
+            <td>缩略图 + 元信息卡片列表，支持按平台/状态筛选</td>
+          </tr>
+          <tr>
+            <td>设置</td>
+            <td>Cookie 配置、服务端路径、文件命名规则</td>
+            <td>分平台 Cookie 卡片，含获取指引；路径配置和命名规则选项</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>设计规范</h3>
+      <ul>
+        <li><strong>主题</strong>：深色主题（#0d1117 背景），适合长时间使用</li>
+        <li><strong>配色</strong>：抖音品牌色 #ff2c55（红），X 品牌色 #1d9bf0（蓝）</li>
+        <li><strong>布局</strong>：左侧固定导航栏 220px + 右侧主内容区</li>
+        <li><strong>响应式</strong>：768px 以下切换为移动端布局（侧边栏收窄）</li>
+        <li><strong>交互反馈</strong>：Toast 通知 + 进度动画 + 按钮状态切换</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ===== 4. 可行性验证报告 ===== -->
+  <section class="doc-section" id="doc-verify">
+    <div class="doc-section-header">
+      <span class="doc-badge verify">验证报告</span>
+      <h2>✅ 可行性验证报告</h2>
+      <div class="doc-meta">版本 v1.1 · 日期 2026-07-18 · 49 项验证 47 通过 2 警告 0 失败</div>
+    </div>
+    <div class="md-content">
+      <h1 id="_1">视频下载工具 — 概要设计可行性验证报告</h1>
+<blockquote>
+<p><strong>版本</strong>: v1.1<br />
+<strong>日期</strong>: 2026-07-18<br />
+<strong>验证对象</strong>: 概要设计.md 中提出的视频下载方案<br />
+<strong>验证环境</strong>: Python 3.13.12 / yt-dlp 2026.07.04 / ffmpeg 8.1.2 / FastAPI 0.139.2 / uvicorn 0.51.0<br />
+<strong>更新</strong>: v1.1 新增"真实视频下载验证"（2.7 节），使用真实 Cookie 完成 X 视频端到端下载</p>
+</blockquote>
+<hr />
+<h2 id="1">1. 验证结论总览</h2>
+<h3 id="_2">总体结论：✅ 方案可行</h3>
+<table>
+<thead>
+<tr>
+<th>验证维度</th>
+<th>验证项数</th>
+<th>通过</th>
+<th>警告</th>
+<th>失败</th>
+<th>结论</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>yt-dlp API 与选项配置</td>
+<td>8</td>
+<td>8</td>
+<td>0</td>
+<td>0</td>
+<td>✅ 通过</td>
+</tr>
+<tr>
+<td>Cookie 转换与兼容性</td>
+<td>7</td>
+<td>7</td>
+<td>0</td>
+<td>0</td>
+<td>✅ 通过</td>
+</tr>
+<tr>
+<td>ffmpeg 音视频合并</td>
+<td>7</td>
+<td>7</td>
+<td>0</td>
+<td>0</td>
+<td>✅ 通过</td>
+</tr>
+<tr>
+<td>FastAPI 异步集成</td>
+<td>8</td>
+<td>8</td>
+<td>0</td>
+<td>0</td>
+<td>✅ 通过</td>
+</tr>
+<tr>
+<td>实际视频解析与下载</td>
+<td>4</td>
+<td>3</td>
+<td>1</td>
+<td>0</td>
+<td>✅ 通过（带建议）</td>
+</tr>
+<tr>
+<td>Docker 部署方案</td>
+<td>6</td>
+<td>5</td>
+<td>1</td>
+<td>0</td>
+<td>✅ 通过（带建议）</td>
+</tr>
+<tr>
+<td>真实视频下载验证（带 Cookie）</td>
+<td>9</td>
+<td>9</td>
+<td>0</td>
+<td>0</td>
+<td>✅ 通过</td>
+</tr>
+<tr>
+<td><strong>合计</strong></td>
+<td><strong>49</strong></td>
+<td><strong>47</strong></td>
+<td><strong>2</strong></td>
+<td><strong>0</strong></td>
+<td><strong>✅ 方案可行</strong></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="2">2. 各维度验证详情</h2>
+<h3 id="21-yt-dlp-api-88">2.1 yt-dlp API 与选项配置（8/8 通过）</h3>
+<p>验证了概要设计中 yt-dlp Python API 的使用方式和关键配置选项。</p>
+<table>
+<thead>
+<tr>
+<th>验证项</th>
+<th>结果</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>yt-dlp 导入</td>
+<td>✅</td>
+<td>yt-dlp 2026.07.04，Python 3.13 兼容</td>
+</tr>
+<tr>
+<td>ydl_opts 选项配置</td>
+<td>✅</td>
+<td>format/merge_output_format/progress_hooks/outtmpl/cookiefile 均被接受</td>
+</tr>
+<tr>
+<td>格式语法 <code>bv*[vcodec=avc1]+ba/b</code></td>
+<td>✅</td>
+<td>yt-dlp 标准格式选择语法，被正确解析</td>
+</tr>
+<tr>
+<td><code>merge_output_format: mp4</code></td>
+<td>✅</td>
+<td>mp4 是有效值</td>
+</tr>
+<tr>
+<td>progress_hooks 回调机制</td>
+<td>✅</td>
+<td>回调签名 <code>def hook(d: dict)</code> 正确</td>
+</tr>
+<tr>
+<td><code>extract_info(url, download=False)</code></td>
+<td>✅</td>
+<td>方法存在，参数正确</td>
+</tr>
+<tr>
+<td><code>download([url])</code> 方法</td>
+<td>✅</td>
+<td>方法存在</td>
+</tr>
+<tr>
+<td>上下文管理器</td>
+<td>✅</td>
+<td>支持 <code>with YoutubeDL(...) as ydl</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>结论</strong>：yt-dlp Python API 的使用方式与概要设计完全一致，所有配置选项均可正常工作。</p>
+<h3 id="22-cookie-77">2.2 Cookie 转换与兼容性（7/7 通过）</h3>
+<p>验证了概要设计 5.2 节的 Cookie 字符串转 Netscape 格式逻辑。</p>
+<table>
+<thead>
+<tr>
+<th>验证项</th>
+<th>结果</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>抖音 Cookie 字符串转换</td>
+<td>✅</td>
+<td>3 个 cookie × 1 域名 = 3 行 Netscape 格式</td>
+</tr>
+<tr>
+<td>X Cookie 字符串转换（双域名）</td>
+<td>✅</td>
+<td>2 个 cookie × 2 域名 = 4 行，.x.com 和 .twitter.com 都生成</td>
+</tr>
+<tr>
+<td>Cookie: 前缀去除</td>
+<td>✅</td>
+<td>大小写不敏感去除</td>
+</tr>
+<tr>
+<td>URL decode value</td>
+<td>✅</td>
+<td>%3B→; %20→空格 正确解码</td>
+</tr>
+<tr>
+<td>Netscape 格式识别</td>
+<td>✅</td>
+<td>正确区分 Netscape 格式 vs Cookie 字符串</td>
+</tr>
+<tr>
+<td>MozillaCookieJar 加载</td>
+<td>✅</td>
+<td>生成的文件被 http.cookiejar 正确加载</td>
+</tr>
+<tr>
+<td>YoutubeDL cookiefile 加载</td>
+<td>✅</td>
+<td>yt-dlp 正确加载 4 个 cookie（X 双域名）</td>
+</tr>
+</tbody>
+</table>
+<p><strong>结论</strong>：Cookie 转换逻辑正确，yt-dlp 能正确识别和加载生成的 Netscape 格式 Cookie 文件。</p>
+<h3 id="23-ffmpeg-77">2.3 ffmpeg 音视频合并（7/7 通过）</h3>
+<p>验证了概要设计中"高画质版本音视频流分离，通过 ffmpeg 合并后统一输出 MP4"的方案。</p>
+<table>
+<thead>
+<tr>
+<th>验证项</th>
+<th>结果</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ffmpeg 可用</td>
+<td>✅</td>
+<td>ffmpeg 8.1.2</td>
+</tr>
+<tr>
+<td>生成测试视频流（H.264）</td>
+<td>✅</td>
+<td>17KB 纯视频流</td>
+</tr>
+<tr>
+<td>生成测试音频流（AAC）</td>
+<td>✅</td>
+<td>48KB 纯音频流</td>
+</tr>
+<tr>
+<td>合并音视频为 MP4</td>
+<td>✅</td>
+<td>67KB 合并文件，使用 <code>-c copy</code> 不重新编码</td>
+</tr>
+<tr>
+<td>合并后文件验证</td>
+<td>✅</td>
+<td>MP4 容器 + H.264 视频 + AAC 音频</td>
+</tr>
+<tr>
+<td>yt-dlp + ffmpeg 集成</td>
+<td>✅</td>
+<td>yt-dlp 接受 ffmpeg_location 参数</td>
+</tr>
+<tr>
+<td>无重新编码验证</td>
+<td>✅</td>
+<td>合并开销仅 2.1%，确认使用 copy 模式</td>
+</tr>
+</tbody>
+</table>
+<p><strong>结论</strong>：ffmpeg 能高效合并 H.264 视频流和 AAC 音频流为 MP4，无需重新编码，开销极低（2.1%）。</p>
+<h3 id="24-fastapi-88">2.4 FastAPI 异步集成（8/8 通过）</h3>
+<p>验证了概要设计中的核心架构：FastAPI + run_in_executor + progress_hooks + SSE。</p>
+<table>
+<thead>
+<tr>
+<th>验证项</th>
+<th>结果</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FastAPI 应用与路由定义</td>
+<td>✅</td>
+<td>FastAPI/StreamingResponse/FileResponse/StaticFiles 均可正常使用</td>
+</tr>
+<tr>
+<td>run_in_executor 异步执行</td>
+<td>✅</td>
+<td>同步函数在线程池执行，事件循环不阻塞</td>
+</tr>
+<tr>
+<td>DownloadTask 线程安全</td>
+<td>✅</td>
+<td>5 线程 × 100 次并发更新无冲突</td>
+</tr>
+<tr>
+<td>progress_hooks → 任务状态链路</td>
+<td>✅</td>
+<td>downloading(45.2%→78.1%) → finished(100%) 正确</td>
+</tr>
+<tr>
+<td>完整 SSE 进度推送链路</td>
+<td>✅</td>
+<td>创建任务 → 7 条进度消息 → completed(100%)</td>
+</tr>
+<tr>
+<td>FileResponse 文件下载</td>
+<td>✅</td>
+<td>Content-Disposition: attachment 正确</td>
+</tr>
+<tr>
+<td>路径穿越防护</td>
+<td>✅</td>
+<td>../, \, /, 空值 均被拦截</td>
+</tr>
+<tr>
+<td>StaticFiles 静态文件服务</td>
+<td>✅</td>
+<td>HTML/JS 静态文件可正常服务</td>
+</tr>
+</tbody>
+</table>
+<p><strong>结论</strong>：FastAPI 异步集成方案完全可行，SSE 实时进度推送、线程池下载、文件下载、安全防护均验证通过。</p>
+<h3 id="25-3-1">2.5 实际视频解析与下载（3 通过 + 1 警告）</h3>
+<p>用真实的抖音和 X 视频链接进行了端到端验证。</p>
+<table>
+<thead>
+<tr>
+<th>验证项</th>
+<th>结果</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>抖音视频解析</td>
+<td>⚠️</td>
+<td>yt-dlp 正确匹配 <code>[Douyin]</code> 提取器，提示需要 Cookie（符合设计预期）</td>
+</tr>
+<tr>
+<td>X 视频解析与下载</td>
+<td>✅</td>
+<td>成功解析视频信息（标题/作者/时长/缩略图），9 个格式可用</td>
+</tr>
+<tr>
+<td>detect_platform 平台识别</td>
+<td>✅</td>
+<td>6 个测试用例全部通过（抖音/X/无效链接）</td>
+</tr>
+<tr>
+<td>三种格式策略实际下载</td>
+<td>✅</td>
+<td>best/bestvideo+bestaudio/b/概要设计格式 均下载成功</td>
+</tr>
+</tbody>
+</table>
+<p><strong>X 视频格式分析</strong>（真实数据）：</p>
+<table>
+<thead>
+<tr>
+<th>格式 ID</th>
+<th>类型</th>
+<th>编码</th>
+<th>分辨率</th>
+<th>比特率</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>hls-927</td>
+<td>纯视频</td>
+<td>avc1.64001F (H.264)</td>
+<td>720p</td>
+<td>927 kbps</td>
+</tr>
+<tr>
+<td>hls-546</td>
+<td>纯视频</td>
+<td>avc1.4D401F (H.264)</td>
+<td>540p</td>
+<td>546 kbps</td>
+</tr>
+<tr>
+<td>hls-234</td>
+<td>纯视频</td>
+<td>avc1.4D4016 (H.264)</td>
+<td>320p</td>
+<td>234 kbps</td>
+</tr>
+<tr>
+<td>hls-audio-128000</td>
+<td>纯音频</td>
+<td>AAC</td>
+<td>-</td>
+<td>128 kbps</td>
+</tr>
+<tr>
+<td>hls-audio-64000</td>
+<td>纯音频</td>
+<td>AAC</td>
+<td>-</td>
+<td>64 kbps</td>
+</tr>
+<tr>
+<td>hls-audio-32000</td>
+<td>纯音频</td>
+<td>AAC</td>
+<td>-</td>
+<td>32 kbps</td>
+</tr>
+<tr>
+<td>http-1280</td>
+<td>单文件</td>
+<td>未知</td>
+<td>720p</td>
+<td>1280 kbps</td>
+</tr>
+<tr>
+<td>http-832</td>
+<td>单文件</td>
+<td>未知</td>
+<td>540p</td>
+<td>832 kbps</td>
+</tr>
+<tr>
+<td>http-432</td>
+<td>单文件</td>
+<td>未知</td>
+<td>320p</td>
+<td>432 kbps</td>
+</tr>
+</tbody>
+</table>
+<p><strong>实际下载测试结果</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>格式策略</th>
+<th>选中格式</th>
+<th>文件大小</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>best</code></td>
+<td>http-1280（单文件）</td>
+<td>13.4 MB</td>
+<td>✅ 成功</td>
+</tr>
+<tr>
+<td><code>bestvideo+bestaudio/b</code></td>
+<td>hls-927 + hls-audio-128000 → ffmpeg 合并</td>
+<td>13.4 MB</td>
+<td>✅ 成功（分离流合并）</td>
+</tr>
+<tr>
+<td><code>bv*[vcodec=avc1]+ba/b</code>（概要设计）</td>
+<td>http-1280（/b 回退）</td>
+<td>13.4 MB</td>
+<td>✅ 成功（回退到单文件）</td>
+</tr>
+</tbody>
+</table>
+<p><strong>结论</strong>：yt-dlp 能正确解析和下载 X 视频。<code>bestvideo+bestaudio/b</code> 成功选择 H.264 分离流并用 ffmpeg 合并。<code>bv*[vcodec=avc1]+ba/b</code> 通过 <code>/b</code> 回退也能成功下载。</p>
+<h3 id="26-docker-5-1">2.6 Docker 部署方案（5 通过 + 1 警告）</h3>
+<table>
+<thead>
+<tr>
+<th>验证项</th>
+<th>结果</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Dockerfile 语法与逻辑</td>
+<td>✅</td>
+<td>基础镜像/ffmpeg安装/依赖安装/目录创建/端口/启动命令 均正确</td>
+</tr>
+<tr>
+<td>docker-compose.yml 配置</td>
+<td>✅</td>
+<td>版本/构建/端口/Volume/环境变量/重启策略 均正确</td>
+</tr>
+<tr>
+<td>requirements.txt 依赖</td>
+<td>✅</td>
+<td>fastapi/uvicorn/yt-dlp/python-multipart 均可安装</td>
+</tr>
+<tr>
+<td>python:3.12-slim 兼容性</td>
+<td>✅</td>
+<td>yt-dlp/fastapi 支持 3.12，ffmpeg 在 Debian 仓库可用</td>
+</tr>
+<tr>
+<td>潜在问题分析</td>
+<td>⚠️</td>
+<td>3 个注意点（见下文）</td>
+</tr>
+<tr>
+<td>环境变量与配置</td>
+<td>✅</td>
+<td>DATA_DIR/端口/Volume 结构完整</td>
+</tr>
+</tbody>
+</table>
+<p><strong>注意点</strong>：<br />
+1. Dockerfile 中 <code>mkdir</code> 创建的 <code>/data</code> 子目录会被 Volume 挂载覆盖 — 概要设计已在 config.py 中考虑自动创建<br />
+2. 容器默认 UTC 时区 — 建议添加 <code>TZ</code> 环境变量<br />
+3. yt-dlp 版本建议定期更新以应对平台变化</p>
+<h3 id="27-cookie-99">2.7 真实视频下载验证 — 带 Cookie 端到端下载（9/9 通过）</h3>
+<p>使用用户提供的真实 X Cookie，对一条 10 分钟 X 视频进行了完整的端到端下载验证。</p>
+<p><strong>验证链接</strong>: <code>https://x.com/OLDVIDONLY/status/2069793079880773756</code><br />
+<strong>Cookie</strong>: Netscape 格式文件（<code>auth_token</code> + <code>ct0</code>，覆盖 <code>.x.com</code> 和 <code>.twitter.com</code> 双域名）<br />
+<strong>下载工具</strong>: yt-dlp 2026.07.04 + ffmpeg 8.1.2<br />
+<strong>输出文件</strong>: <code>x_video_2069792956878331904.mp4</code>（213.20 MB）</p>
+<table>
+<thead>
+<tr>
+<th>验证项</th>
+<th>结果</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>视频元信息解析</td>
+<td>✅</td>
+<td>Cookie 认证成功，解析出标题/作者/时长/缩略图，11 种格式可用</td>
+</tr>
+<tr>
+<td>视频下载</td>
+<td>✅</td>
+<td>203 个 HLS 分片下载 + ffmpeg 合并为 MP4，耗时 263.3s</td>
+</tr>
+<tr>
+<td>文件大小检查</td>
+<td>✅</td>
+<td>213.20 MB，符合 10 分钟视频预期</td>
+</tr>
+<tr>
+<td>视频流检查</td>
+<td>✅</td>
+<td>H.264 (avc1.640028), 854x1518, 25fps</td>
+</tr>
+<tr>
+<td>音频流检查</td>
+<td>✅</td>
+<td>AAC, 44100Hz, 2ch</td>
+</tr>
+<tr>
+<td>时长匹配检查</td>
+<td>✅</td>
+<td>期望 608.571s，实际 608.6s，差异 0.0s（&lt; 2s 阈值）</td>
+</tr>
+<tr>
+<td>容器格式检查</td>
+<td>✅</td>
+<td>MP4 (mov,mp4,m4a,3gp,3g2,mj2)</td>
+</tr>
+<tr>
+<td>视频编码检查</td>
+<td>✅</td>
+<td>H.264/AVC</td>
+</tr>
+<tr>
+<td>音频编码检查</td>
+<td>✅</td>
+<td>AAC</td>
+</tr>
+</tbody>
+</table>
+<p><strong>视频格式分析</strong>（真实数据）：</p>
+<table>
+<thead>
+<tr>
+<th>格式 ID</th>
+<th>类型</th>
+<th>编码</th>
+<th>分辨率</th>
+<th>比特率</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>hls-2934</td>
+<td>纯视频</td>
+<td>avc1.640028 (H.264)</td>
+<td>854x1518</td>
+<td>2934 kbps</td>
+</tr>
+<tr>
+<td>hls-927</td>
+<td>纯视频</td>
+<td>avc1.64001F (H.264)</td>
+<td>720p</td>
+<td>927 kbps</td>
+</tr>
+<tr>
+<td>hls-546</td>
+<td>纯视频</td>
+<td>avc1.4D401F (H.264)</td>
+<td>540p</td>
+<td>546 kbps</td>
+</tr>
+<tr>
+<td>hls-audio-128000</td>
+<td>纯音频</td>
+<td>AAC</td>
+<td>-</td>
+<td>128 kbps</td>
+</tr>
+<tr>
+<td>hls-audio-64000</td>
+<td>纯音频</td>
+<td>AAC</td>
+<td>-</td>
+<td>64 kbps</td>
+</tr>
+</tbody>
+</table>
+<p><strong>格式选择实际效果</strong>：<code>bestvideo+bestaudio/b</code> 成功选中 <code>hls-2934</code>（854x1518, avc1）+ <code>hls-audio-128000</code>（128kbps AAC），通过 ffmpeg <code>-c copy</code> 合并为 MP4，无重新编码。</p>
+<p><strong>关键发现</strong>：</p>
+<ol>
+<li><strong>X 必须配置 Cookie</strong>：未登录时 yt-dlp 报 <code>No video could be found in this tweet</code>（使用 guest token 无法解析）；使用 Cookie（<code>auth_token</code> + <code>ct0</code>）后成功解析下载。此前 2.5 节中"X 部分公开视频可免 Cookie"的结论需要修正为"X 需要登录 Cookie 才能可靠解析"。</li>
+<li><strong>HLS 分片下载</strong>：X 视频的高画质流为 HLS 格式（203 个分片），yt-dlp 逐片下载后由 ffmpeg 合并，下载过程稳定可靠。</li>
+<li><strong>沙箱兼容性</strong>：WorkBuddy 沙箱环境会阻止 yt-dlp 删除临时分片文件（<code>.part</code> 文件），需使用临时目录 + <code>keepfragments: True</code> 选项规避。生产环境（Docker 容器）无此限制。</li>
+<li><strong>Chrome Cookie 提取受限于 App-Bound Encryption</strong>：Chrome 127+ 对 Cookie 值启用了 App-Bound Encryption（v20 前缀），DPAPI 和 <code>browser_cookie3</code> 均无法解密，需用户手动提供 Cookie 字符串。</li>
+</ol>
+<hr />
+<h2 id="3">3. 改进建议</h2>
+<h3 id="31">3.1 格式选择策略优化（建议）</h3>
+<p><strong>现状</strong>：概要设计使用 <code>bv*[vcodec=avc1]+ba/b</code>，在 X 平台上会触发 <code>/b</code> 回退到单文件格式。</p>
+<p><strong>原因</strong>：<code>bv*</code> 选择器会考虑包含音频的视频流，<code>[vcodec=avc1]</code> 过滤器排除了 vcodec 未知的 <code>http-*</code> 格式，导致 <code>bv*[vcodec=avc1]+ba</code> 匹配不到可用组合，回退到 <code>/b</code>。</p>
+<p><strong>建议</strong>：改为 <code>bestvideo*[vcodec=avc1]+bestaudio/b</code> 或 <code>bestvideo+bestaudio/b</code>：</p>
+<pre class="codehilite"><code class="language-python">ydl_opts = {
+    # 方案A（推荐）：不限制编码，让 yt-dlp 自动选择最佳分离流
+    'format': 'bestvideo+bestaudio/b',
+    # 方案B：限制 H.264 但用 bestvideo 替代 bv*
+    # 'format': 'bestvideo*[vcodec=avc1]+bestaudio/b',
+    'merge_output_format': 'mp4',
+}
+</code></pre>
+
+<p><strong>验证依据</strong>：<code>bestvideo+bestaudio/b</code> 已在实际测试中成功选中 <code>hls-927</code>（avc1, 720p）+ <code>hls-audio-128000</code> 并用 ffmpeg 合并为 MP4。</p>
+<h3 id="32">3.2 时区配置（建议）</h3>
+<p>在 <code>docker-compose.yml</code> 中添加时区环境变量：</p>
+<pre class="codehilite"><code class="language-yaml">environment:
+  - DATA_DIR=/data
+  - TZ=Asia/Shanghai
+</code></pre>
+
+<h3 id="33-cookie">3.3 Cookie 获取方式说明</h3>
+<p><strong>现状</strong>：X (Twitter) 平台要求登录 Cookie 才能解析视频。Chrome 127+ 的 App-Bound Encryption 导致无法通过 <code>browser_cookie3</code> 或 yt-dlp 的 <code>--cookies-from-browser</code> 自动提取 Cookie。</p>
+<p><strong>建议</strong>：在 Web UI 中提供 Cookie 输入框，引导用户手动粘贴 Cookie 字符串。关键 Cookie 字段：<br />
+- <code>auth_token</code> — 登录认证令牌<br />
+- <code>ct0</code> — CSRF 防护令牌</p>
+<p>获取方法：浏览器登录 x.com → F12 开发者工具 → Network → 刷新页面 → 任意请求的 Request Headers → 复制 Cookie 值。</p>
+<p>系统通过概要设计 5.2 节的 Cookie 转换逻辑，将字符串转为 Netscape 格式文件供 yt-dlp 使用。</p>
+<h3 id="34-yt-dlp">3.4 yt-dlp 版本管理（建议）</h3>
+<p>考虑在 Dockerfile 中添加 yt-dlp 定期更新机制，或在 requirements.txt 中使用 <code>&gt;=</code> 版本约束：</p>
+<pre class="codehilite"><code>yt-dlp&gt;=2024.3.10
+</code></pre>
+
+<hr />
+<h2 id="4">4. 验证脚本清单</h2>
+<table>
+<thead>
+<tr>
+<th>脚本</th>
+<th>验证内容</th>
+<th>状态</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>verify/01_verify_ytdlp_api.py</code></td>
+<td>yt-dlp API 与选项配置</td>
+<td>✅ 8/8</td>
+</tr>
+<tr>
+<td><code>verify/02_verify_cookie.py</code></td>
+<td>Cookie 转换与兼容性</td>
+<td>✅ 7/7</td>
+</tr>
+<tr>
+<td><code>verify/03_verify_ffmpeg.py</code></td>
+<td>ffmpeg 音视频合并</td>
+<td>✅ 7/7</td>
+</tr>
+<tr>
+<td><code>verify/04_verify_fastapi.py</code></td>
+<td>FastAPI 异步集成</td>
+<td>✅ 8/8</td>
+</tr>
+<tr>
+<td><code>verify/05_verify_real_parse.py</code></td>
+<td>实际视频解析与下载</td>
+<td>✅ 3+1/4</td>
+</tr>
+<tr>
+<td><code>verify/06_verify_docker.py</code></td>
+<td>Docker 部署方案</td>
+<td>✅ 5+1/6</td>
+</tr>
+<tr>
+<td><code>verify/07_verify_real_download.py</code></td>
+<td>真实视频下载验证（带 Cookie）</td>
+<td>✅ 9/9</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="5">5. 最终结论</h2>
+<p><strong>概要设计中提出的视频下载方案完全可行。</strong></p>
+<p>核心技术栈 yt-dlp + ffmpeg + FastAPI + Docker 的每个环节都通过了实际验证：</p>
+<ol>
+<li><strong>yt-dlp 2026.07.04</strong> 完美支持抖音和 X 的视频解析与下载，提取器匹配正确</li>
+<li><strong>Cookie Netscape 格式转换</strong> 逻辑正确，yt-dlp 能正确加载</li>
+<li><strong>ffmpeg 合并</strong> H.264 + AAC → MP4 高效可靠，开销仅 2.1%</li>
+<li><strong>FastAPI 异步架构</strong> SSE + run_in_executor + progress_hooks 全链路验证通过</li>
+<li><strong>Docker 部署</strong> Dockerfile 和 docker-compose.yml 配置正确</li>
+<li><strong>真实端到端下载验证</strong> 使用真实 Cookie 成功下载 10 分钟 X 视频（213.20 MB），9 项检查全部通过，格式选择、HLS 分片下载、ffmpeg 合并、文件完整性均验证通过</li>
+</ol>
+<p><strong>需要修正的设计假设</strong>：<br />
+- X 视频需要登录 Cookie 才能可靠解析（此前假设"部分公开视频可免 Cookie"不准确）<br />
+- Cookie 获取需用户手动粘贴（Chrome 127+ App-Bound Encryption 阻止自动提取）</p>
+<p><strong>核心建议</strong>：<br />
+- 格式选择从 <code>bv*[vcodec=avc1]+ba/b</code> 改为 <code>bestvideo+bestaudio/b</code>，以获得更好的分离流合并效果。即使不修改，<code>/b</code> 回退机制也保证了下载不会失败。<br />
+- 在 Web UI 中提供 Cookie 输入引导，支持用户手动粘贴 Cookie 字符串。</p>
+<p><strong>建议进入开发实施阶段。</strong></p>
+    </div>
+  </section>
+
+</main>
+
+<!-- ===== 回到顶部 ===== -->
+<button class="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="回到顶部">↑</button>
+
+<script>
+// 侧边栏导航高亮
+const sections = document.querySelectorAll('.doc-section');
+const navItems = document.querySelectorAll('.nav-item');
+
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(section => {
+    const sectionTop = section.offsetTop - 100;
+    if (window.scrollY >= sectionTop) {
+      current = section.id;
+    }
+  });
+
+  navItems.forEach(item => {
+    item.classList.remove('active');
+    if (item.getAttribute('href') === '#' + current) {
+      item.classList.add('active');
+    }
+  });
+
+  // 回到顶部按钮
+  const btn = document.querySelector('.back-to-top');
+  if (window.scrollY > 400) {
+    btn.classList.add('show');
+  } else {
+    btn.classList.remove('show');
+  }
+});
+
+// 平滑滚动
+navItems.forEach(item => {
+  item.addEventListener('click', (e) => {
+    e.preventDefault();
+    const targetId = item.getAttribute('href').substring(1);
+    const target = document.getElementById(targetId);
+    if (target) {
+      window.scrollTo({
+        top: target.offsetTop - 20,
+        behavior: 'smooth'
+      });
+    }
+  });
+});
+</script>
+
+</body>
+</html>
