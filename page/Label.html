@@ -1,0 +1,1637 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>客群洞察圈选智能体 V1.0.1</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 100%; height: 100%; overflow: hidden; font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Arial, sans-serif; font-size: 13px; }
+
+/* ===== 顶部导航栏 ===== */
+.top-nav { height: 48px; background: #0d1b2a; display: flex; align-items: center; padding: 0 16px; color: #fff; white-space: nowrap; }
+.top-nav .logo { display: flex; align-items: center; gap: 8px; margin-right: 24px; font-size: 15px; font-weight: 600; }
+.top-nav .logo-icon { width: 24px; height: 24px; background: linear-gradient(135deg, #1677ff, #722ed1); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+.top-nav .nav-menu { display: flex; align-items: center; gap: 2px; flex: 1; overflow: hidden; }
+.top-nav .nav-item { padding: 6px 12px; font-size: 13px; color: rgba(255,255,255,0.65); cursor: pointer; border-radius: 4px; white-space: nowrap; }
+.top-nav .nav-item:hover { color: #fff; background: rgba(255,255,255,0.08); }
+.top-nav .nav-item.active { background: #1677ff; color: #fff; }
+.top-nav .nav-right { display: flex; align-items: center; gap: 16px; margin-left: 16px; }
+.top-nav .nav-right span { color: rgba(255,255,255,0.65); font-size: 13px; cursor: pointer; }
+.top-nav .version-tag { font-size: 11px; color: rgba(255,255,255,0.4); border: 1px solid rgba(255,255,255,0.2); padding: 1px 6px; border-radius: 3px; }
+
+/* ===== 主布局 ===== */
+.main-layout { display: flex; height: calc(100% - 48px); }
+
+/* ===== 左侧边栏 ===== */
+.sidebar { width: 220px; background: #f5f6f8; border-right: 1px solid #e8e8e8; display: flex; flex-direction: column; flex-shrink: 0; transition: width 0.25s ease; }
+.sidebar.collapsed { width: 48px; }
+.sidebar.collapsed .sidebar-back span, .sidebar.collapsed .sidebar-title, .sidebar.collapsed .sidebar-new-chat span, .sidebar.collapsed .sidebar-section, .sidebar.collapsed .sidebar-history-header, .sidebar.collapsed .sidebar-history-list { display: none; }
+.sidebar.collapsed .sidebar-new-chat { justify-content: center; padding: 8px; margin: 0 8px 8px; }
+.sidebar.collapsed .sidebar-collapse-btn { justify-content: center; }
+.sidebar-collapse-btn { padding: 8px 16px; font-size: 12px; color: #999; cursor: pointer; display: flex; align-items: center; gap: 6px; justify-content: flex-end; }
+.sidebar-collapse-btn:hover { color: #1677ff; }
+.sidebar-back { padding: 4px 16px 8px; font-size: 13px; color: #333; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+.sidebar-back::before { content: "\2190"; font-size: 14px; }
+.sidebar-title { padding: 8px 16px 12px; font-size: 15px; font-weight: 600; color: #1a1a1a; display: flex; align-items: center; justify-content: space-between; }
+.sidebar-new-chat { margin: 0 16px 12px; padding: 8px 12px; background: #fff; border: 1px solid #1677ff; border-radius: 6px; font-size: 13px; color: #1677ff; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.15s; }
+.sidebar-new-chat:hover { background: #1677ff; color: #fff; }
+.sidebar-new-chat::before { content: "+"; font-size: 16px; font-weight: bold; }
+.sidebar-section { padding: 8px 0; }
+.sidebar-section-label { padding: 4px 16px; font-size: 12px; color: #999; }
+.sidebar-menu-item { padding: 7px 16px 7px 28px; font-size: 13px; color: #333; cursor: pointer; }
+.sidebar-menu-item:hover { background: rgba(22,119,255,0.06); }
+.sidebar-menu-item.active { color: #1677ff; background: rgba(22,119,255,0.06); border-right: 2px solid #1677ff; }
+.sidebar-history-header { padding: 10px 16px 6px; font-size: 12px; color: #999; display: flex; justify-content: space-between; align-items: center; margin-top: 4px; border-top: 1px solid #e8e8e8; }
+.sidebar-history-header .more { color: #1677ff; cursor: pointer; font-size: 12px; }
+.sidebar-history-list { flex: 1; overflow-y: auto; }
+.sidebar-history-item { padding: 8px 16px; font-size: 12px; color: #666; cursor: pointer; line-height: 1.5; display: flex; flex-direction: column; gap: 3px; border-left: 2px solid transparent; transition: all 0.15s; }
+.sidebar-history-item:hover { background: rgba(22,119,255,0.04); color: #333; }
+.sidebar-history-item.active { color: #1677ff; background: rgba(22,119,255,0.06); border-left-color: #1677ff; }
+.sidebar-history-item .hist-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sidebar-history-item .hist-meta { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #bbb; }
+.sidebar-history-item .hist-meta .hist-dot { width: 5px; height: 5px; border-radius: 50%; }
+.sidebar-history-item .hist-meta .hist-dot.done { background: #52c41a; }
+.sidebar-history-item .hist-meta .hist-dot.progress { background: #faad14; }
+
+/* ===== 中间对话面板 ===== */
+.chat-panel { flex: 1; background: #fff; display: flex; flex-direction: column; position: relative; min-width: 0; transition: flex 0.3s ease; }
+.chat-panel.narrowed { flex: 0 0 480px; border-right: 1px solid #e8e8e8; }
+.chat-header { height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; border-bottom: 1px solid #f0f0f0; background: #fafbfc; flex-shrink: 0; }
+.chat-header-left { display: flex; align-items: center; gap: 8px; }
+.chat-header-title { font-size: 14px; font-weight: 500; color: #333; }
+.chat-header-subtitle { font-size: 12px; color: #999; }
+.canvas-toggle-btn { display: flex; align-items: center; gap: 5px; padding: 4px 12px; font-size: 12px; color: #666; cursor: pointer; border: 1px solid #d9d9d9; border-radius: 16px; background: #fff; transition: all 0.15s; }
+.canvas-toggle-btn:hover { color: #1677ff; border-color: #1677ff; background: #f0f5ff; }
+.canvas-toggle-btn.active { color: #1677ff; border-color: #1677ff; background: #f0f5ff; }
+
+/* ===== 7步进度条 ===== */
+.step-bar { height: 40px; display: flex; align-items: center; padding: 0 12px; border-bottom: 1px solid #f0f0f0; background: #fff; gap: 0; flex-shrink: 0; overflow-x: auto; }
+.step-item { display: flex; align-items: center; gap: 5px; cursor: pointer; flex-shrink: 0; }
+.step-circle { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; flex-shrink: 0; transition: all 0.2s; }
+.step-circle.done { background: #52c41a; color: #fff; }
+.step-circle.current { background: #1677ff; color: #fff; box-shadow: 0 0 0 3px rgba(22,119,255,0.15); }
+.step-circle.pending { background: #e8e8e8; color: #999; }
+.step-label { font-size: 11px; white-space: nowrap; }
+.step-label.active { color: #1677ff; font-weight: 500; }
+.step-label.done { color: #52c41a; }
+.step-label.pending { color: #bbb; }
+.step-line { width: 12px; height: 2px; background: #e8e8e8; margin: 0 4px; flex-shrink: 0; }
+.step-line.done { background: #52c41a; }
+
+/* ===== 对话内容区 ===== */
+.chat-content { flex: 1; overflow-y: auto; padding: 16px 0; display: flex; flex-direction: column; align-items: center; }
+.chat-content-inner { width: 100%; max-width: 720px; padding: 0 24px; }
+.chat-message { display: flex; gap: 10px; margin-bottom: 14px; animation: msgIn 0.3s ease; }
+@keyframes msgIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.chat-message.user { flex-direction: row-reverse; }
+.chat-avatar { width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 11px; }
+.chat-avatar.ai { background: linear-gradient(135deg, #722ed1, #1677ff); }
+.chat-avatar.user { background: #1677ff; }
+.chat-bubble { border-radius: 10px; padding: 12px 16px; font-size: 13px; line-height: 1.7; max-width: calc(100% - 44px); }
+.chat-bubble.ai { background: #f5f6f8; color: #333; }
+.chat-bubble.user { background: #e6f4ff; color: #333; }
+.chat-bubble .label-line { margin-bottom: 6px; font-weight: 500; }
+
+/* ===== 卡片通用 ===== */
+.rec-card { background: #fff; border: 1px solid #e8e8e8; border-radius: 8px; margin-top: 10px; overflow: hidden; }
+.rec-card-header { background: #f0f5ff; padding: 7px 12px; font-size: 12px; color: #1677ff; font-weight: 500; display: flex; align-items: center; gap: 4px; border-bottom: 1px solid #e8e8e8; }
+.rec-card-header::before { content: ""; width: 3px; height: 12px; background: #1677ff; border-radius: 2px; }
+.rec-card-header.purple { background: #f9f0ff; color: #722ed1; }
+.rec-card-header.purple::before { background: #722ed1; }
+.rec-card-header.green { background: #f6ffed; color: #52c41a; }
+.rec-card-header.green::before { background: #52c41a; }
+.rec-card-header.orange { background: #fff7e6; color: #fa8c16; }
+.rec-card-header.orange::before { background: #fa8c16; }
+.rec-card-body { padding: 10px 12px; }
+.rec-row { display: flex; align-items: flex-start; margin-bottom: 7px; font-size: 12.5px; }
+.rec-row:last-child { margin-bottom: 0; }
+.rec-row .rec-label { color: #999; width: 70px; flex-shrink: 0; }
+.rec-row .rec-value { color: #333; flex: 1; }
+.rec-row .rec-tag { display: inline-block; background: #f0f5ff; color: #1677ff; padding: 2px 8px; border-radius: 3px; font-size: 11px; margin-right: 4px; margin-bottom: 2px; }
+.rec-row .rec-tag.green { background: #f6ffed; color: #52c41a; }
+.rec-row .rec-tag.orange { background: #fff7e6; color: #fa8c16; }
+.rec-row .rec-tag.purple { background: #f9f0ff; color: #722ed1; }
+
+/* 方案对比卡片 */
+.scheme-compare { display: flex; gap: 10px; margin-top: 10px; }
+.scheme-card { flex: 1; border: 1px solid #e8e8e8; border-radius: 8px; overflow: hidden; cursor: pointer; transition: all 0.2s; position: relative; }
+.scheme-card:hover { border-color: #1677ff; box-shadow: 0 2px 12px rgba(22,119,255,0.12); }
+.scheme-card.selected { border-color: #1677ff; border-width: 2px; }
+.scheme-card.selected::after { content: "\2713"; position: absolute; top: 6px; right: 8px; width: 18px; height: 18px; background: #1677ff; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; }
+.scheme-card-header { padding: 8px 12px; font-size: 12px; font-weight: 600; color: #fff; }
+.scheme-card-header.blue { background: #1677ff; }
+.scheme-card-header.green { background: #52c41a; }
+.scheme-card-header.orange { background: #fa8c16; }
+.scheme-card-body { padding: 10px 12px; }
+.scheme-card-row { font-size: 11.5px; color: #666; margin-bottom: 5px; line-height: 1.5; }
+.scheme-card-row:last-child { margin-bottom: 0; }
+.scheme-card-row .row-label { color: #999; }
+.scheme-card-row .row-num { font-size: 18px; font-weight: 700; color: #1677ff; }
+.scheme-card-row .row-num.green { color: #52c41a; }
+.scheme-card-row .row-num.orange { color: #fa8c16; }
+
+/* 洞察提示 */
+.insight-tip { display: flex; align-items: flex-start; gap: 6px; margin-top: 10px; padding: 8px 12px; background: #fffbe6; border: 1px solid #ffe58f; border-radius: 6px; font-size: 12px; color: #ad6800; line-height: 1.5; }
+.insight-tip::before { content: "\1F4A1"; font-size: 13px; flex-shrink: 0; }
+.insight-tip.risk { background: #fff2f0; border-color: #ffccc7; color: #d4380d; }
+.insight-tip.risk::before { content: "\26A0\FE0F"; }
+.insight-tip.success { background: #f6ffed; border-color: #b7eb8f; color: #389e0d; }
+.insight-tip.success::before { content: "\2705"; }
+
+/* 采纳按钮组 */
+.adopt-group { display: flex; align-items: center; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.btn-adopt { display: inline-flex; align-items: center; gap: 4px; background: #1677ff; color: #fff; padding: 6px 20px; border-radius: 4px; font-size: 12.5px; cursor: pointer; border: none; transition: all 0.15s; }
+.btn-adopt:hover { background: #4096ff; }
+.btn-adopt.adopted { background: #52c41a; cursor: default; }
+.btn-adopt:disabled { background: #d9d9d9; cursor: not-allowed; }
+.btn-adj { display: inline-flex; align-items: center; background: #fff; color: #666; padding: 6px 16px; border-radius: 4px; font-size: 12.5px; cursor: pointer; border: 1px solid #d9d9d9; transition: all 0.15s; }
+.btn-adj:hover { color: #1677ff; border-color: #1677ff; }
+.btn-adj.active { color: #1677ff; border-color: #1677ff; background: #f0f5ff; }
+.adopt-hint { font-size: 11px; color: #bbb; margin-left: 4px; }
+
+/* 结构化提问 */
+.question-card { background: #fff; border: 1px solid #d9d9d9; border-radius: 8px; margin-top: 10px; overflow: hidden; }
+.question-card-header { background: #f0f5ff; padding: 8px 12px; font-size: 12px; font-weight: 500; color: #1677ff; display: flex; align-items: center; gap: 6px; }
+.question-card-header::before { content: "\2753"; font-size: 13px; }
+.question-options { padding: 8px 12px; display: flex; flex-direction: column; gap: 6px; }
+.question-option { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid #e8e8e8; border-radius: 6px; cursor: pointer; transition: all 0.15s; font-size: 12.5px; }
+.question-option:hover { border-color: #1677ff; background: #f0f5ff; }
+.question-option.selected { border-color: #1677ff; background: #e6f4ff; color: #1677ff; font-weight: 500; }
+.question-option .option-radio { width: 14px; height: 14px; border: 2px solid #d9d9d9; border-radius: 50%; flex-shrink: 0; transition: all 0.15s; }
+.question-option.selected .option-radio { border-color: #1677ff; background: #1677ff; box-shadow: inset 0 0 0 2px #fff; }
+
+/* 快捷回复 */
+.quick-replies { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; margin-left: 42px; }
+.quick-reply { padding: 5px 14px; background: #fff; border: 1px solid #d9d9d9; border-radius: 16px; font-size: 12px; color: #666; cursor: pointer; transition: all 0.15s; }
+.quick-reply:hover { color: #1677ff; border-color: #1677ff; background: #f0f5ff; }
+
+/* 分析报告 */
+.analysis-report { background: #fff; border: 1px solid #e8e8e8; border-radius: 8px; margin-top: 10px; overflow: hidden; }
+.analysis-section { padding: 12px 14px; border-bottom: 1px solid #f0f0f0; }
+.analysis-section:last-child { border-bottom: none; }
+.analysis-section-title { font-size: 12px; font-weight: 600; color: #333; margin-bottom: 8px; display: flex; align-items: center; gap: 4px; }
+.analysis-section-title::before { content: ""; width: 3px; height: 12px; background: #1677ff; border-radius: 2px; }
+
+/* CSS柱状图 */
+.bar-chart { display: flex; flex-direction: column; gap: 6px; }
+.bar-row { display: flex; align-items: center; gap: 8px; font-size: 11px; }
+.bar-label { width: 80px; text-align: right; color: #666; flex-shrink: 0; }
+.bar-track { flex: 1; height: 18px; background: #f5f5f5; border-radius: 3px; overflow: hidden; position: relative; }
+.bar-fill { height: 100%; border-radius: 3px; display: flex; align-items: center; justify-content: flex-end; padding-right: 6px; color: #fff; font-size: 10px; font-weight: 600; transition: width 0.8s ease; width: 0; }
+.bar-fill.blue { background: linear-gradient(90deg, #4096ff, #1677ff); }
+.bar-fill.green { background: linear-gradient(90deg, #95de64, #52c41a); }
+.bar-fill.orange { background: linear-gradient(90deg, #ffc069, #fa8c16); }
+.bar-fill.purple { background: linear-gradient(90deg, #b37feb, #722ed1); }
+.bar-fill.cyan { background: linear-gradient(90deg, #87e8de, #13c2c2); }
+
+/* 关键特征标签 */
+.feature-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.feature-tag { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 4px; font-size: 11px; }
+.feature-tag.highlight { background: #e6f4ff; color: #1677ff; border: 1px solid #91caff; }
+.feature-tag.risk { background: #fff2f0; color: #d4380d; border: 1px solid #ffccc7; }
+.feature-tag.normal { background: #f5f5f5; color: #666; border: 1px solid #e8e8e8; }
+.feature-tag .tag-arrow { font-size: 10px; }
+.feature-tag .tag-arrow.up { color: #52c41a; }
+.feature-tag .tag-arrow.down { color: #d4380d; }
+
+/* 拆分结果卡片 */
+.split-result { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+.split-card { background: #fff; border: 1px solid #e8e8e8; border-radius: 8px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; transition: all 0.2s; }
+.split-card:hover { border-color: #1677ff; box-shadow: 0 2px 8px rgba(22,119,255,0.1); }
+.split-card-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; color: #fff; flex-shrink: 0; }
+.split-card-icon.c1 { background: #5b8ff9; }
+.split-card-icon.c2 { background: #5ad8a6; }
+.split-card-icon.c3 { background: #5d7092; }
+.split-card-icon.c4 { background: #f6bd16; }
+.split-card-info { flex: 1; }
+.split-card-title { font-size: 13px; font-weight: 600; color: #333; margin-bottom: 2px; }
+.split-card-desc { font-size: 11px; color: #999; }
+.split-card-num { text-align: right; }
+.split-card-num .num { font-size: 18px; font-weight: 700; color: #1677ff; }
+.split-card-num .label { font-size: 11px; color: #999; }
+.split-card-rate { font-size: 11px; color: #52c41a; font-weight: 500; }
+
+/* 发布流程 */
+.publish-flow { margin-top: 10px; }
+.publish-step { display: flex; align-items: flex-start; gap: 12px; padding: 8px 0; position: relative; }
+.publish-step:not(:last-child)::after { content: ""; position: absolute; left: 15px; top: 36px; bottom: -4px; width: 2px; background: #e8e8e8; }
+.publish-step.done:not(:last-child)::after { background: #52c41a; }
+.publish-step-icon { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; z-index: 1; }
+.publish-step-icon.done { background: #52c41a; color: #fff; }
+.publish-step-icon.current { background: #1677ff; color: #fff; box-shadow: 0 0 0 3px rgba(22,119,255,0.15); }
+.publish-step-icon.pending { background: #f5f5f5; color: #999; }
+.publish-step-content { flex: 1; padding-top: 4px; }
+.publish-step-title { font-size: 13px; font-weight: 500; color: #333; }
+.publish-step-title.done { color: #52c41a; }
+.publish-step-title.pending { color: #999; }
+.publish-step-desc { font-size: 11px; color: #999; margin-top: 2px; }
+
+/* 思考指示器 */
+.typing-indicator { display: flex; gap: 4px; padding: 4px 0; }
+.typing-indicator span { width: 6px; height: 6px; border-radius: 50%; background: #1677ff; opacity: 0.4; animation: typing 1.4s infinite; }
+.typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+.typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typing { 0%,60%,100% { opacity: 0.3; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-3px); } }
+
+/* 输入区域 */
+.chat-input-area { padding: 12px 0 20px; flex-shrink: 0; display: flex; justify-content: center; }
+.chat-input-wrapper { width: 100%; max-width: 720px; margin: 0 24px; display: flex; align-items: flex-end; gap: 8px; background: #f5f6f8; border-radius: 12px; padding: 10px 14px; border: 1px solid #e8e8e8; transition: border-color 0.15s; }
+.chat-input-wrapper:focus-within { border-color: #1677ff; background: #fff; }
+.chat-input { flex: 1; border: none; background: transparent; outline: none; font-size: 13px; color: #333; resize: none; max-height: 120px; line-height: 1.5; }
+.chat-input::placeholder { color: #bbb; }
+.chat-send-btn { width: 30px; height: 30px; background: #1677ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #fff; font-size: 15px; border: none; flex-shrink: 0; }
+.chat-send-btn:hover { background: #4096ff; }
+.chat-send-btn:disabled { background: #d9d9d9; cursor: not-allowed; }
+.input-hint { font-size: 11px; color: #bbb; margin-top: 6px; text-align: center; }
+
+/* ===== 右侧画布 ===== */
+.canvas-area { width: 0; background: #f0f2f5; overflow: hidden; display: flex; flex-direction: column; flex-shrink: 0; transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; }
+.canvas-area.expanded { flex: 1; min-width: 400px; }
+.canvas-toolbar { height: 40px; background: #fff; border-bottom: 1px solid #e8e8e8; display: flex; align-items: center; padding: 0 16px; gap: 4px; flex-shrink: 0; z-index: 10; }
+.toolbar-label { font-size: 13px; font-weight: 500; color: #333; margin-right: 12px; }
+.toolbar-btn { padding: 4px 10px; font-size: 12px; color: #666; cursor: pointer; border: 1px solid #e8e8e8; border-radius: 4px; background: #fff; display: flex; align-items: center; gap: 4px; }
+.toolbar-btn:hover { color: #1677ff; border-color: #1677ff; }
+.toolbar-btn.primary { color: #1677ff; border-color: #1677ff; }
+.toolbar-divider { width: 1px; height: 16px; background: #e8e8e8; margin: 0 6px; }
+.toolbar-right { margin-left: auto; display: flex; gap: 4px; align-items: center; }
+.btn-collapse-canvas { color: #999; cursor: pointer; font-size: 16px; padding: 4px; border-radius: 4px; }
+.btn-collapse-canvas:hover { color: #1677ff; background: #f5f6f8; }
+.canvas-inner { position: relative; flex: 1; overflow: auto; padding: 20px; }
+
+/* 画布视图切换 */
+.canvas-view { display: none; }
+.canvas-view.active { display: block; animation: canvasIn 0.4s ease; }
+@keyframes canvasIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* ===== 决策树画布 ===== */
+.tree-container { display: flex; flex-direction: column; align-items: center; gap: 0; }
+.tree-level { display: flex; justify-content: center; gap: 16px; position: relative; z-index: 1; }
+.tree-level.new { animation: nodeIn 0.4s ease; }
+@keyframes nodeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+.tree-spacer { height: 32px; position: relative; }
+.tree-connector { position: absolute; left: 50%; transform: translateX(-50%); width: 2px; height: 100%; background: #1677ff; }
+.tree-connector::after { content: ""; position: absolute; bottom: -1px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 6px solid #1677ff; }
+.node-card { background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden; position: relative; z-index: 1; transition: box-shadow 0.2s, transform 0.2s; }
+.node-card:hover { box-shadow: 0 4px 16px rgba(22,119,255,0.15); transform: translateY(-1px); }
+.node-card-header { background: #1677ff; color: #fff; padding: 6px 14px; font-size: 13px; font-weight: 500; display: flex; align-items: center; justify-content: space-between; }
+.node-card-header.purple { background: #722ed1; }
+.node-card-header.green { background: #52c41a; }
+.node-card-header.orange { background: #fa8c16; }
+.node-card-body { padding: 8px 14px; }
+.node-card-row { font-size: 12px; color: #666; margin-bottom: 4px; }
+.node-card-row:last-child { margin-bottom: 0; }
+.node-card-row .row-label { color: #999; }
+.node-card-row .row-value { color: #333; }
+.node-card-row .row-num { color: #1677ff; font-weight: 600; font-size: 13px; }
+.node-badge { position: absolute; top: -6px; right: -6px; background: #52c41a; color: #fff; font-size: 10px; padding: 2px 8px; border-radius: 10px; box-shadow: 0 2px 6px rgba(82,196,26,0.3); z-index: 2; white-space: nowrap; }
+.node-root { width: 220px; }
+.node-mid { width: 240px; }
+.node-leaf { width: 130px; }
+.node-leaf .node-card-header { padding: 4px 10px; font-size: 12px; }
+.node-leaf .node-card-body { padding: 6px 10px; }
+.node-leaf .node-card-row { font-size: 11px; }
+.status-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 4px; }
+.status-dot.green { background: #52c41a; }
+.status-dot.blue { background: #1677ff; }
+.status-dot.orange { background: #faad14; }
+
+/* ===== 分析画布 ===== */
+.analysis-canvas { max-width: 600px; margin: 0 auto; }
+.analysis-card { background: #fff; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 16px; overflow: hidden; }
+.analysis-card-header { padding: 12px 16px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 6px; border-bottom: 1px solid #f0f0f0; }
+.analysis-card-header.blue { color: #1677ff; }
+.analysis-card-header.green { color: #52c41a; }
+.analysis-card-header.purple { color: #722ed1; }
+.analysis-card-header::before { content: ""; width: 4px; height: 16px; border-radius: 2px; }
+.analysis-card-header.blue::before { background: #1677ff; }
+.analysis-card-header.green::before { background: #52c41a; }
+.analysis-card-header.purple::before { background: #722ed1; }
+.analysis-card-body { padding: 16px; }
+
+/* 饼图容器 */
+.pie-chart-container { display: flex; align-items: center; gap: 20px; }
+.pie-chart { width: 140px; height: 140px; border-radius: 50%; position: relative; flex-shrink: 0; }
+.pie-legend { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+.pie-legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+.pie-legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+.pie-legend-label { color: #666; flex: 1; }
+.pie-legend-value { color: #333; font-weight: 600; }
+
+/* ===== 拆分画布 ===== */
+.split-canvas { max-width: 700px; margin: 0 auto; }
+.split-summary { background: #fff; border-radius: 10px; padding: 20px; margin-bottom: 16px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+.split-summary .total-num { font-size: 36px; font-weight: 700; color: #1677ff; }
+.split-summary .total-label { font-size: 13px; color: #999; margin-top: 4px; }
+.split-summary .split-arrow { font-size: 24px; color: #999; margin: 8px 0; }
+.split-cards-row { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+.split-result-card { width: 130px; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: all 0.2s; }
+.split-result-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
+.split-result-card-header { padding: 8px; text-align: center; font-size: 12px; font-weight: 600; color: #fff; }
+.split-result-card-body { padding: 12px 8px; text-align: center; }
+.split-result-card-body .num { font-size: 20px; font-weight: 700; }
+.split-result-card-body .label { font-size: 11px; color: #999; margin-top: 2px; }
+.split-result-card-body .rate { font-size: 11px; margin-top: 6px; padding: 2px 6px; border-radius: 3px; display: inline-block; }
+
+/* ===== 发布画布 ===== */
+.publish-canvas { max-width: 500px; margin: 0 auto; }
+.publish-status-card { background: #fff; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden; }
+.publish-status-header { background: linear-gradient(135deg, #1677ff, #4096ff); color: #fff; padding: 20px; text-align: center; }
+.publish-status-header .status-icon { font-size: 36px; margin-bottom: 8px; }
+.publish-status-header .status-title { font-size: 16px; font-weight: 600; }
+.publish-status-header .status-sub { font-size: 12px; opacity: 0.8; margin-top: 4px; }
+.publish-check-list { padding: 16px 20px; }
+.publish-check-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #f5f5f5; font-size: 13px; }
+.publish-check-item:last-child { border-bottom: none; }
+.publish-check-item .check-icon { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; }
+.publish-check-item .check-icon.pass { background: #52c41a; color: #fff; }
+.publish-check-item .check-icon.fail { background: #d4380d; color: #fff; }
+.publish-check-item .check-label { flex: 1; color: #333; }
+.publish-check-item .check-result { font-size: 11px; color: #52c41a; font-weight: 500; }
+.publish-info-row { display: flex; justify-content: space-between; padding: 8px 20px; font-size: 12px; border-top: 1px solid #f0f0f0; }
+.publish-info-row .label { color: #999; }
+.publish-info-row .value { color: #333; font-weight: 500; }
+
+/* 滚动条 */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-thumb { background: #d9d9d9; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #bfbfbf; }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* 欢迎页 */
+.welcome-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; }
+.welcome-icon { width: 64px; height: 64px; background: linear-gradient(135deg, #722ed1, #1677ff); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 28px; color: #fff; margin-bottom: 16px; box-shadow: 0 4px 16px rgba(22,119,255,0.25); }
+.welcome-title { font-size: 20px; font-weight: 600; color: #1a1a1a; margin-bottom: 8px; }
+.welcome-desc { font-size: 13px; color: #999; margin-bottom: 24px; text-align: center; line-height: 1.6; }
+.welcome-suggestions { display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 480px; }
+.welcome-suggestion { padding: 12px 16px; background: #f5f6f8; border: 1px solid #e8e8e8; border-radius: 8px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 10px; }
+.welcome-suggestion:hover { border-color: #1677ff; background: #f0f5ff; }
+.welcome-suggestion .sugg-icon { font-size: 18px; flex-shrink: 0; }
+.welcome-suggestion .sugg-text { font-size: 13px; color: #333; }
+.welcome-suggestion .sugg-arrow { margin-left: auto; color: #ccc; font-size: 14px; }
+
+/* 完成提示 */
+.flow-complete { text-align: center; padding: 20px; background: linear-gradient(135deg, #f6ffed, #e6f4ff); border-radius: 12px; margin-top: 10px; }
+.flow-complete-icon { font-size: 32px; margin-bottom: 8px; }
+.flow-complete-title { font-size: 14px; font-weight: 600; color: #333; margin-bottom: 4px; }
+.flow-complete-desc { font-size: 12px; color: #999; }
+
+/* 审批模拟弹窗 */
+.approval-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); display: none; align-items: center; justify-content: center; z-index: 9999; }
+.approval-modal-overlay.show { display: flex; }
+.approval-modal { background: #fff; border-radius: 12px; padding: 24px; max-width: 400px; width: 90%; box-shadow: 0 8px 32px rgba(0,0,0,0.2); }
+.approval-modal-title { font-size: 16px; font-weight: 600; color: #333; margin-bottom: 12px; }
+.approval-modal-desc { font-size: 13px; color: #666; line-height: 1.6; margin-bottom: 16px; }
+.approval-modal-btns { display: flex; gap: 8px; justify-content: flex-end; }
+.approval-modal-btn { padding: 8px 20px; border-radius: 6px; font-size: 13px; cursor: pointer; border: none; }
+.approval-modal-btn.primary { background: #1677ff; color: #fff; }
+.approval-modal-btn.primary:hover { background: #4096ff; }
+.approval-modal-btn.secondary { background: #f5f5f5; color: #666; }
+.approval-modal-btn.secondary:hover { background: #e8e8e8; }
+</style>
+</head>
+<body>
+
+<!-- ===== 顶部导航栏 ===== -->
+<div class="top-nav">
+  <div class="logo">
+    <div class="logo-icon">标</div>
+    标签库
+    <span class="version-tag">V1.0.1</span>
+  </div>
+  <div class="nav-menu">
+    <div class="nav-item">首页</div>
+    <div class="nav-item">标签搜索</div>
+    <div class="nav-item">客群看板</div>
+    <div class="nav-item active">客群洞察分析</div>
+    <div class="nav-item">客群总览</div>
+    <div class="nav-item">客户生命周期</div>
+    <div class="nav-item">视图画像</div>
+    <div class="nav-item">运营分析</div>
+    <div class="nav-item">标签全流程监控</div>
+    <div class="nav-item">后台管理</div>
+  </div>
+  <div class="nav-right">
+    <span>帮助</span>
+    <span>Admin</span>
+  </div>
+</div>
+
+<!-- ===== 主布局 ===== -->
+<div class="main-layout">
+
+  <!-- 左侧边栏 -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-collapse-btn" onclick="toggleSidebar()">折叠 ◀</div>
+    <div class="sidebar-back"><span>返回</span></div>
+    <div class="sidebar-title">客群洞察智能体</div>
+    <div class="sidebar-new-chat" onclick="newChat()"><span>新对话</span></div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">快捷场景</div>
+      <div class="sidebar-menu-item">5G套餐升档</div>
+      <div class="sidebar-menu-item">单卡用户促值</div>
+      <div class="sidebar-menu-item">宽带潜在用户</div>
+      <div class="sidebar-menu-item">权益产品推广</div>
+      <div class="sidebar-menu-item">流失用户预警</div>
+    </div>
+    <div class="sidebar-history-header">
+      历史对话
+      <span class="more">更多</span>
+    </div>
+    <div class="sidebar-history-list">
+      <div class="sidebar-history-item">
+        <div class="hist-text">单卡用户高危流失筛选</div>
+        <div class="hist-meta">
+          <span><span class="hist-dot done"></span>已发布</span>
+          <span>今天 11:20</span>
+        </div>
+      </div>
+      <div class="sidebar-history-item">
+        <div class="hist-text">宽带潜在用户挖掘分析</div>
+        <div class="hist-meta">
+          <span><span class="hist-dot progress"></span>进行中</span>
+          <span>昨天 16:45</span>
+        </div>
+      </div>
+      <div class="sidebar-history-item">
+        <div class="hist-text">腾讯会员权益产品推广</div>
+        <div class="hist-meta">
+          <span><span class="hist-dot done"></span>已发布</span>
+          <span>07-08</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 中间对话面板 -->
+  <div class="chat-panel" id="chatPanel">
+
+    <!-- 对话头部 -->
+    <div class="chat-header">
+      <div class="chat-header-left">
+        <span class="chat-header-title">客群洞察智能体</span>
+        <span class="chat-header-subtitle" id="chatSubtitle">· 新对话</span>
+      </div>
+      <div class="canvas-toggle-btn" id="canvasToggleBtn" onclick="toggleCanvas()">
+        <span>📊</span>
+        <span>分析画布</span>
+      </div>
+    </div>
+
+    <!-- 7步进度条 -->
+    <div class="step-bar" id="stepBar">
+      <div class="step-item" onclick="goToStep(1)">
+        <div class="step-circle current">1</div>
+        <span class="step-label active">意图输入</span>
+      </div>
+      <div class="step-line"></div>
+      <div class="step-item" onclick="goToStep(2)">
+        <div class="step-circle pending">2</div>
+        <span class="step-label pending">场景识别</span>
+      </div>
+      <div class="step-line"></div>
+      <div class="step-item" onclick="goToStep(3)">
+        <div class="step-circle pending">3</div>
+        <span class="step-label pending">标签推荐</span>
+      </div>
+      <div class="step-line"></div>
+      <div class="step-item" onclick="goToStep(4)">
+        <div class="step-circle pending">4</div>
+        <span class="step-label pending">交互确认</span>
+      </div>
+      <div class="step-line"></div>
+      <div class="step-item" onclick="goToStep(5)">
+        <div class="step-circle pending">5</div>
+        <span class="step-label pending">客群分析</span>
+      </div>
+      <div class="step-line"></div>
+      <div class="step-item" onclick="goToStep(6)">
+        <div class="step-circle pending">6</div>
+        <span class="step-label pending">客群拆分</span>
+      </div>
+      <div class="step-line"></div>
+      <div class="step-item" onclick="goToStep(7)">
+        <div class="step-circle pending">7</div>
+        <span class="step-label pending">客群发布</span>
+      </div>
+    </div>
+
+    <!-- 对话内容区 -->
+    <div class="chat-content" id="chatContent">
+      <!-- 欢迎页 -->
+      <div class="welcome-state" id="welcomeState">
+        <div class="welcome-icon">🎯</div>
+        <div class="welcome-title">客群洞察圈选智能体</div>
+        <div class="welcome-desc">通过自然语言描述营销诉求，智能识别场景、推荐标签、分析特征、拆分客群、一键发布</div>
+        <div class="welcome-suggestions">
+          <div class="welcome-suggestion" onclick="startWithSuggestion(0)">
+            <span class="sugg-icon">📱</span>
+            <span class="sugg-text">我是成都网格的，想做一波5G套餐升档营销，针对流量多用但套餐低的用户</span>
+            <span class="sugg-arrow">→</span>
+          </div>
+          <div class="welcome-suggestion" onclick="startWithSuggestion(1)">
+            <span class="sugg-icon">🌐</span>
+            <span class="sugg-text">帮我筛选宽带潜在用户，没装宽带但有套餐升档需求的</span>
+            <span class="sugg-arrow">→</span>
+          </div>
+          <div class="welcome-suggestion" onclick="startWithSuggestion(2)">
+            <span class="sugg-icon">🎁</span>
+            <span class="sugg-text">推广腾讯会员权益产品，找最可能转化的用户群体</span>
+            <span class="sugg-arrow">→</span>
+          </div>
+          <div class="welcome-suggestion" onclick="startWithSuggestion(3)">
+            <span class="sugg-icon">⚠️</span>
+            <span class="sugg-text">筛选高危流失用户，做一波挽留营销</span>
+            <span class="sugg-arrow">→</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 对话消息容器（动态添加） -->
+      <div class="chat-content-inner" id="chatInner" style="display:none;">
+      </div>
+    </div>
+
+    <!-- 输入区域 -->
+    <div class="chat-input-area" id="inputArea" style="display:none;">
+      <div style="width:100%; max-width:720px; margin:0 24px;">
+        <div class="chat-input-wrapper">
+          <textarea class="chat-input" id="chatInput" placeholder="输入您的分析需求..." rows="1"></textarea>
+          <button class="chat-send-btn" id="sendBtn" onclick="sendMessage()">→</button>
+        </div>
+        <div class="input-hint" id="inputHint">客群洞察智能体支持自然语言交互</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 右侧画布 -->
+  <div class="canvas-area" id="canvasArea">
+    <div class="canvas-toolbar">
+      <span class="toolbar-label" id="canvasTitle">分析画布</span>
+      <button class="toolbar-btn">📐 适应</button>
+      <div class="toolbar-divider"></div>
+      <button class="toolbar-btn">📍 定位</button>
+      <div class="toolbar-right">
+        <button class="toolbar-btn">💾 保存</button>
+        <button class="toolbar-btn primary">📥 导出</button>
+        <span class="btn-collapse-canvas" onclick="collapseCanvas()" title="收起画布">✕</span>
+      </div>
+    </div>
+
+    <div class="canvas-inner" id="canvasInner">
+      <!-- 画布视图：初始空状态 -->
+      <div class="canvas-view active" id="canvasEmpty">
+        <div style="display:flex;align-items:center;justify-content:center;height:100%;color:#ccc;font-size:14px;min-height:300px;">
+          <div style="text-align:center;">
+            <div style="font-size:48px;margin-bottom:12px;">📊</div>
+            <div>开始对话后，分析画布将实时展示圈选过程</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 画布视图：决策树 (Step 1-4) -->
+      <div class="canvas-view" id="canvasTree">
+        <div class="tree-container" id="treeContainer">
+          <!-- 动态添加节点 -->
+        </div>
+      </div>
+
+      <!-- 画布视图：客群分析 (Step 5) -->
+      <div class="canvas-view" id="canvasAnalysis">
+        <div class="analysis-canvas">
+          <div class="analysis-card">
+            <div class="analysis-card-header blue">客群规模</div>
+            <div class="analysis-card-body" style="text-align:center;">
+              <div style="font-size:36px;font-weight:700;color:#1677ff;">287,000</div>
+              <div style="font-size:13px;color:#999;margin-top:4px;">人 · 占成都移网用户 6.3%</div>
+              <div style="display:flex;justify-content:center;gap:20px;margin-top:12px;">
+                <div><span style="font-size:18px;font-weight:600;color:#52c41a;">12.3%</span><div style="font-size:11px;color:#999;">预期转化率</div></div>
+                <div><span style="font-size:18px;font-weight:600;color:#fa8c16;">35,301</span><div style="font-size:11px;color:#999;">预期转化人数</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="analysis-card">
+            <div class="analysis-card-header blue">套餐档位分布</div>
+            <div class="analysis-card-body">
+              <div class="bar-chart" id="barChart1">
+                <div class="bar-row"><span class="bar-label">≤39元</span><div class="bar-track"><div class="bar-fill blue" data-w="35">35%</div></div></div>
+                <div class="bar-row"><span class="bar-label">40-49元</span><div class="bar-track"><div class="bar-fill blue" data-w="28">28%</div></div></div>
+                <div class="bar-row"><span class="bar-label">50-59元</span><div class="bar-track"><div class="bar-fill blue" data-w="22">22%</div></div></div>
+                <div class="bar-row"><span class="bar-label">≥60元</span><div class="bar-track"><div class="bar-fill blue" data-w="15">15%</div></div></div>
+              </div>
+            </div>
+          </div>
+          <div class="analysis-card">
+            <div class="analysis-card-header green">月均流量分布</div>
+            <div class="analysis-card-body">
+              <div class="bar-chart" id="barChart2">
+                <div class="bar-row"><span class="bar-label">5-8GB</span><div class="bar-track"><div class="bar-fill green" data-w="42">42%</div></div></div>
+                <div class="bar-row"><span class="bar-label">8-12GB</span><div class="bar-track"><div class="bar-fill green" data-w="31">31%</div></div></div>
+                <div class="bar-row"><span class="bar-label">12-20GB</span><div class="bar-track"><div class="bar-fill green" data-w="18">18%</div></div></div>
+                <div class="bar-row"><span class="bar-label">≥20GB</span><div class="bar-track"><div class="bar-fill green" data-w="9">9%</div></div></div>
+              </div>
+            </div>
+          </div>
+          <div class="analysis-card">
+            <div class="analysis-card-header purple">终端类型分布</div>
+            <div class="analysis-card-body">
+              <div class="pie-chart-container">
+                <div class="pie-chart" style="background: conic-gradient(#5b8ff9 0% 62%, #5ad8a6 62% 81%, #f6bd16 81% 93%, #e8684a 93% 100%);">
+                  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:80px;height:80px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#1677ff;">5G<br>81%</div>
+                </div>
+                <div class="pie-legend">
+                  <div class="pie-legend-item"><div class="pie-legend-dot" style="background:#5b8ff9;"></div><span class="pie-legend-label">5G手机</span><span class="pie-legend-value">62%</span></div>
+                  <div class="pie-legend-item"><div class="pie-legend-dot" style="background:#5ad8a6;"></div><span class="pie-legend-label">5G手机(高端)</span><span class="pie-legend-value">19%</span></div>
+                  <div class="pie-legend-item"><div class="pie-legend-dot" style="background:#f6bd16;"></div><span class="pie-legend-label">4G手机</span><span class="pie-legend-value">12%</span></div>
+                  <div class="pie-legend-item"><div class="pie-legend-dot" style="background:#e8684a;"></div><span class="pie-legend-label">其他</span><span class="pie-legend-value">7%</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="analysis-card">
+            <div class="analysis-card-header green">显著特征（vs全量用户）</div>
+            <div class="analysis-card-body">
+              <div class="bar-chart" id="barChart3">
+                <div class="bar-row"><span class="bar-label">套餐档位</span><div class="bar-track"><div class="bar-fill orange" data-w="68">低于均值68% ↑</div></div></div>
+                <div class="bar-row"><span class="bar-label">流量消费</span><div class="bar-track"><div class="bar-fill green" data-w="52">高于同档52% ↑</div></div></div>
+                <div class="bar-row"><span class="bar-label">5G终端</span><div class="bar-track"><div class="bar-fill green" data-w="81">5G覆盖81% ↑</div></div></div>
+                <div class="bar-row"><span class="bar-label">套餐稳定</span><div class="bar-track"><div class="bar-fill purple" data-w="93">3月未变93% ↑</div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 画布视图：客群拆分 (Step 6) -->
+      <div class="canvas-view" id="canvasSplit">
+        <div class="split-canvas">
+          <div class="split-summary">
+            <div class="total-num">287,000</div>
+            <div class="total-label">原始客群总规模</div>
+            <div class="split-arrow">↓ 按产品档位拆分</div>
+          </div>
+          <div class="split-cards-row">
+            <div class="split-result-card">
+              <div class="split-result-card-header" style="background:#5b8ff9;">39元套餐组</div>
+              <div class="split-result-card-body">
+                <div class="num" style="color:#5b8ff9;">10.0万</div>
+                <div class="label">占比 35.0%</div>
+                <div class="rate" style="background:#e6f4ff;color:#1677ff;">预期 14.2%</div>
+              </div>
+            </div>
+            <div class="split-result-card">
+              <div class="split-result-card-header" style="background:#5ad8a6;">49元套餐组</div>
+              <div class="split-result-card-body">
+                <div class="num" style="color:#5ad8a6;">8.1万</div>
+                <div class="label">占比 28.2%</div>
+                <div class="rate" style="background:#f6ffed;color:#52c41a;">预期 13.1%</div>
+              </div>
+            </div>
+            <div class="split-result-card">
+              <div class="split-result-card-header" style="background:#5d7092;">59元套餐组</div>
+              <div class="split-result-card-body">
+                <div class="num" style="color:#5d7092;">6.3万</div>
+                <div class="label">占比 22.0%</div>
+                <div class="rate" style="background:#f6ffed;color:#52c41a;">预期 12.8%</div>
+              </div>
+            </div>
+            <div class="split-result-card">
+              <div class="split-result-card-header" style="background:#f6bd16;">79元套餐组</div>
+              <div class="split-result-card-body">
+                <div class="num" style="color:#f6bd16;">4.3万</div>
+                <div class="label">占比 14.8%</div>
+                <div class="rate" style="background:#fff7e6;color:#fa8c16;">预期 10.5%</div>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:16px;background:#fff;border-radius:10px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+            <div style="font-size:13px;font-weight:600;color:#333;margin-bottom:10px;">拆分依据</div>
+            <div style="font-size:12px;color:#666;line-height:1.8;">
+              <strong style="color:#1677ff;">适配度评分模型</strong>综合考虑以下因素：<br>
+              ① 用户当前ARPU与产品价格的差距（升档幅度不宜过大）<br>
+              ② 用户流量/语音使用量与产品资源的匹配度<br>
+              ③ 同类用户的历史升档转化率<br>
+              ④ 产品卖点与用户特征的匹配度<br><br>
+              <strong style="color:#52c41a;">互斥保证：</strong>每个用户仅分配到适配度最高的一个子客群，子客群间无重叠。
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 画布视图：客群发布 (Step 7) -->
+      <div class="canvas-view" id="canvasPublish">
+        <div class="publish-canvas">
+          <div class="publish-status-card" id="publishStatusCard">
+            <div class="publish-status-header" id="publishHeader">
+              <div class="status-icon" id="publishIcon">⏳</div>
+              <div class="status-title" id="publishTitle">待审批</div>
+              <div class="status-sub" id="publishSub">客群CG-20260710-001 · 已提交审批</div>
+            </div>
+            <div class="publish-check-list">
+              <div class="publish-check-item">
+                <div class="check-icon pass">✓</div>
+                <span class="check-label">客群规模校验</span>
+                <span class="check-result">287,000人 ✓</span>
+              </div>
+              <div class="publish-check-item">
+                <div class="check-icon pass">✓</div>
+                <span class="check-label">标签合规校验</span>
+                <span class="check-result">通过</span>
+              </div>
+              <div class="publish-check-item">
+                <div class="check-icon pass">✓</div>
+                <span class="check-label">营销频次控制</span>
+                <span class="check-result">已排除超限用户</span>
+              </div>
+              <div class="publish-check-item">
+                <div class="check-icon pass">✓</div>
+                <span class="check-label">客群互斥检查</span>
+                <span class="check-result">无冲突</span>
+              </div>
+              <div class="publish-check-item">
+                <div class="check-icon pass">✓</div>
+                <span class="check-label">黑名单排除</span>
+                <span class="check-result">已排除1,234人</span>
+              </div>
+              <div class="publish-check-item">
+                <div class="check-icon pass">✓</div>
+                <span class="check-label">客群快照</span>
+                <span class="check-result">已生成</span>
+              </div>
+            </div>
+            <div class="publish-info-row">
+              <span class="label">客群ID</span>
+              <span class="value">CG-20260710-001</span>
+            </div>
+            <div class="publish-info-row">
+              <span class="label">子客群数</span>
+              <span class="value">4个（39/49/59/79元适配组）</span>
+            </div>
+            <div class="publish-info-row">
+              <span class="label">推送渠道</span>
+              <span class="value">短信 + 外呼 + APP推送</span>
+            </div>
+            <div class="publish-info-row">
+              <span class="label">审批级别</span>
+              <span class="value">市级管理员</span>
+            </div>
+            <div class="publish-info-row">
+              <span class="label">预计触达</span>
+              <span class="value">审批通过后T+1日</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- 审批模拟弹窗 -->
+<div class="approval-modal-overlay" id="approvalModal">
+  <div class="approval-modal">
+    <div class="approval-modal-title">🔄 模拟审批</div>
+    <div class="approval-modal-desc">客群规模 287,000 人，需市级管理员审批。是否模拟审批通过？（实际环境中将自动提交审批工单）</div>
+    <div class="approval-modal-btns">
+      <button class="approval-modal-btn secondary" onclick="closeApproval(false)">驳回</button>
+      <button class="approval-modal-btn primary" onclick="closeApproval(true)">审批通过</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== 全局状态 =====
+let currentStep = 0;
+let canvasExpanded = false;
+let isProcessing = false;
+let selectedScheme = 'A';
+let clarifications = { excludeMarketed: true, scale: 'B' };
+let splitMethod = 'product';
+let published = false;
+
+const stepNames = ['意图输入', '场景识别', '标签推荐', '交互确认', '客群分析', '客群拆分', '客群发布'];
+const canvasTitles = ['圈选决策树', '圈选决策树', '圈选决策树', '圈选决策树', '客群分析报告', '客群拆分方案', '客群发布'];
+
+const suggestions = [
+  '我是成都网格的，想做一波5G套餐升档营销，主要针对那些用流量比较多但套餐还比较低的用户',
+  '帮我筛选宽带潜在用户，没装宽带但有套餐升档需求的',
+  '推广腾讯会员权益产品，找最可能转化的用户群体',
+  '筛选高危流失用户，做一波挽留营销'
+];
+
+// ===== 侧边栏折叠 =====
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const btn = sidebar.querySelector('.sidebar-collapse-btn');
+  sidebar.classList.toggle('collapsed');
+  btn.textContent = sidebar.classList.contains('collapsed') ? '▶' : '折叠 ◀';
+}
+
+// ===== 画布展开/收起 =====
+function expandCanvas() {
+  document.getElementById('canvasArea').classList.add('expanded');
+  document.getElementById('chatPanel').classList.add('narrowed');
+  document.getElementById('canvasToggleBtn').classList.add('active');
+  canvasExpanded = true;
+}
+function collapseCanvas() {
+  document.getElementById('canvasArea').classList.remove('expanded');
+  document.getElementById('chatPanel').classList.remove('narrowed');
+  document.getElementById('canvasToggleBtn').classList.remove('active');
+  canvasExpanded = false;
+}
+function toggleCanvas() {
+  if (canvasExpanded) { collapseCanvas(); } else { expandCanvas(); }
+}
+
+// ===== 消息操作 =====
+function addUserMessage(text) {
+  const inner = document.getElementById('chatInner');
+  const msg = document.createElement('div');
+  msg.className = 'chat-message user';
+  msg.innerHTML = '<div class="chat-avatar user">我</div><div class="chat-bubble user">' + escapeHtml(text) + '</div>';
+  inner.appendChild(msg);
+  scrollToBottom();
+}
+
+function addAIMessage(htmlContent) {
+  const inner = document.getElementById('chatInner');
+  const msg = document.createElement('div');
+  msg.className = 'chat-message';
+  msg.innerHTML = '<div class="chat-avatar ai">AI</div><div class="chat-bubble ai">' + htmlContent + '</div>';
+  inner.appendChild(msg);
+  scrollToBottom();
+  return msg;
+}
+
+function showTyping() {
+  const inner = document.getElementById('chatInner');
+  const msg = document.createElement('div');
+  msg.className = 'chat-message';
+  msg.id = 'typingMsg';
+  msg.innerHTML = '<div class="chat-avatar ai">AI</div><div class="chat-bubble ai"><div class="typing-indicator"><span></span><span></span><span></span></div></div>';
+  inner.appendChild(msg);
+  scrollToBottom();
+}
+
+function hideTyping() {
+  const typing = document.getElementById('typingMsg');
+  if (typing) typing.remove();
+}
+
+function scrollToBottom() {
+  const content = document.getElementById('chatContent');
+  setTimeout(() => { content.scrollTop = content.scrollHeight; }, 50);
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// ===== 步骤进度条更新 =====
+function updateStepBar(step) {
+  const items = document.querySelectorAll('#stepBar .step-item');
+  const lines = document.querySelectorAll('#stepBar .step-line');
+  items.forEach((item, i) => {
+    const circle = item.querySelector('.step-circle');
+    const label = item.querySelector('.step-label');
+    const stepNum = i + 1;
+    circle.classList.remove('done', 'current', 'pending');
+    label.classList.remove('done', 'active', 'pending');
+    if (stepNum < step) {
+      circle.classList.add('done');
+      circle.textContent = '✓';
+      label.classList.add('done');
+    } else if (stepNum === step) {
+      circle.classList.add('current');
+      circle.textContent = stepNum;
+      label.classList.add('active');
+    } else {
+      circle.classList.add('pending');
+      circle.textContent = stepNum;
+      label.classList.add('pending');
+    }
+  });
+  lines.forEach((line, i) => {
+    line.classList.toggle('done', i + 1 < step);
+  });
+}
+
+// ===== 画布视图切换 =====
+function switchCanvasView(step) {
+  const views = ['canvasEmpty', 'canvasTree', 'canvasAnalysis', 'canvasSplit', 'canvasPublish'];
+  views.forEach(v => document.getElementById(v).classList.remove('active'));
+
+  if (step === 0) {
+    document.getElementById('canvasEmpty').classList.add('active');
+    document.getElementById('canvasTitle').textContent = '分析画布';
+  } else if (step <= 4) {
+    document.getElementById('canvasTree').classList.add('active');
+    document.getElementById('canvasTitle').textContent = canvasTitles[step - 1];
+  } else if (step === 5) {
+    document.getElementById('canvasAnalysis').classList.add('active');
+    document.getElementById('canvasTitle').textContent = canvasTitles[4];
+    animateBarCharts();
+  } else if (step === 6) {
+    document.getElementById('canvasSplit').classList.add('active');
+    document.getElementById('canvasTitle').textContent = canvasTitles[5];
+  } else if (step === 7) {
+    document.getElementById('canvasPublish').classList.add('active');
+    document.getElementById('canvasTitle').textContent = canvasTitles[6];
+  }
+
+  if (!canvasExpanded && step > 0) { expandCanvas(); }
+}
+
+function animateBarCharts() {
+  setTimeout(() => {
+    document.querySelectorAll('#canvasAnalysis .bar-fill').forEach(bar => {
+      const w = bar.getAttribute('data-w');
+      bar.style.width = w + '%';
+    });
+  }, 100);
+}
+
+// ===== 决策树节点管理 =====
+function addTreeNode(headerText, headerClass, badgeText, rows, isRoot) {
+  const container = document.getElementById('treeContainer');
+  const level = document.createElement('div');
+  level.className = 'tree-level new';
+
+  let badgeHtml = badgeText ? '<div class="node-badge">' + badgeText + '</div>' : '';
+  let rowsHtml = rows.map(r => '<div class="node-card-row"><span class="row-label">' + r.label + '</span><span class="' + (r.num ? 'row-num' : 'row-value') + '">' + r.value + '</span></div>').join('');
+  let widthClass = isRoot ? 'node-root' : 'node-mid';
+
+  level.innerHTML = '<div class="node-card ' + widthClass + '">' + badgeHtml +
+    '<div class="node-card-header ' + headerClass + '"><span>' + headerText + '</span></div>' +
+    '<div class="node-card-body">' + rowsHtml + '</div></div>';
+
+  if (container.children.length > 0) {
+    const spacer = document.createElement('div');
+    spacer.className = 'tree-spacer';
+    spacer.innerHTML = '<div class="tree-connector"></div>';
+    container.appendChild(spacer);
+  }
+  container.appendChild(level);
+}
+
+// ===== 开始对话 =====
+function startWithSuggestion(idx) {
+  startConversation(suggestions[idx]);
+}
+
+function startConversation(text) {
+  // 隐藏欢迎页
+  document.getElementById('welcomeState').style.display = 'none';
+  document.getElementById('chatInner').style.display = '';
+  document.getElementById('inputArea').style.display = '';
+  document.getElementById('chatSubtitle').textContent = '· ' + text.substring(0, 20) + '...';
+  document.getElementById('chatInput').value = '';
+  document.getElementById('chatInput').focus();
+
+  // 用户消息
+  addUserMessage(text);
+
+  // 进入Step 1
+  currentStep = 1;
+  updateStepBar(1);
+  switchCanvasView(1);
+
+  // 添加根节点到决策树
+  addTreeNode('全量用户', '', '', [
+    { label: '口径：', value: '移网在网有效用户' },
+    { label: '账期：', value: '20260710' },
+    { label: '用户总数：', value: '411,800,471', num: true }
+  ], true);
+
+  // AI思考 -> 场景识别
+  isProcessing = true;
+  showTyping();
+  setTimeout(() => {
+    hideTyping();
+    step2_sceneRecognition();
+    isProcessing = false;
+  }, 1800);
+}
+
+// ===== Step 2: 场景识别 =====
+function step2_sceneRecognition() {
+  currentStep = 2;
+  updateStepBar(2);
+
+  const html = `
+    <div class="label-line">已识别您的营销意图，匹配到以下业务场景（FR1: 自然语言场景识别）：</div>
+    <div class="rec-card">
+      <div class="rec-card-header">场景识别结果</div>
+      <div class="rec-card-body">
+        <div class="rec-row">
+          <span class="rec-label">营销目标</span>
+          <span class="rec-value">套餐升档（向上销售）</span>
+        </div>
+        <div class="rec-row">
+          <span class="rec-label">目标特征</span>
+          <span class="rec-value">
+            <span class="rec-tag">流量使用多</span>
+            <span class="rec-tag">套餐档位低</span>
+          </span>
+        </div>
+        <div class="rec-row">
+          <span class="rec-label">产品信息</span>
+          <span class="rec-value">5G套餐</span>
+        </div>
+        <div class="rec-row">
+          <span class="rec-label">所属区域</span>
+          <span class="rec-value">四川省-成都市</span>
+        </div>
+      </div>
+    </div>
+    <div class="rec-card" style="margin-top:8px;">
+      <div class="rec-card-header green">Top-3 候选场景</div>
+      <div class="rec-card-body">
+        <div class="rec-row">
+          <span class="rec-label">场景1</span>
+          <span class="rec-value"><strong>5G套餐升档营销</strong> <span class="rec-tag green" style="margin-left:8px;">置信度 92%</span></span>
+        </div>
+        <div class="rec-row">
+          <span class="rec-label">场景2</span>
+          <span class="rec-value">套餐流失预警 <span class="rec-tag orange" style="margin-left:8px;">置信度 68%</span></span>
+        </div>
+        <div class="rec-row">
+          <span class="rec-label">场景3</span>
+          <span class="rec-value">流量溢出营销 <span class="rec-tag" style="margin-left:8px;">置信度 55%</span></span>
+        </div>
+      </div>
+    </div>
+    <div class="insight-tip success">已锁定场景：<strong>5G套餐升档营销</strong>（置信度92%），正在为您推荐标签方案...</div>
+    <div class="quick-replies">
+      <div class="quick-reply" onclick="confirmScene()">✓ 确认场景，推荐标签</div>
+      <div class="quick-reply" onclick="userTypeMessage('选场景3，流量溢出营销')">选场景3</div>
+    </div>
+  `;
+  addAIMessage(html);
+
+  // 决策树添加：归属地市
+  addTreeNode('归属地市', '', '✓ 已采纳', [
+    { label: '条件：', value: '= 成都市' },
+    { label: '用户数：', value: '4,562,300', num: true }
+  ], false);
+
+  // 自动进入Step 3
+  setTimeout(() => { step3_tagRecommendation(); }, 2000);
+}
+
+// ===== Step 3: 标签推荐 =====
+function step3_tagRecommendation() {
+  currentStep = 3;
+  updateStepBar(3);
+
+  const html = `
+    <div class="label-line">基于成都区域历史转化数据，为您推荐以下2个标签组合方案（FR2: 标签推荐与取值优化）：</div>
+    <div class="scheme-compare">
+      <div class="scheme-card selected" onclick="selectScheme(this, 'A')">
+        <div class="scheme-card-header blue">方案A · 高转化率</div>
+        <div class="scheme-card-body">
+          <div class="scheme-card-row"><span class="row-label">核心标签</span></div>
+          <div class="scheme-card-row">套餐档位 ≤ 59元</div>
+          <div class="scheme-card-row">月均流量 ≥ 5GB</div>
+          <div class="scheme-card-row">终端类型 = 5G</div>
+          <div class="scheme-card-row"><span class="row-label">预估客群</span></div>
+          <div class="scheme-card-row"><span class="row-num">32.5万</span></div>
+          <div class="scheme-card-row"><span class="row-label">历史转化率</span></div>
+          <div class="scheme-card-row"><span class="row-num green">12.3%</span></div>
+        </div>
+      </div>
+      <div class="scheme-card" onclick="selectScheme(this, 'B')">
+        <div class="scheme-card-header green">方案B · 大规模</div>
+        <div class="scheme-card-body">
+          <div class="scheme-card-row"><span class="row-label">核心标签</span></div>
+          <div class="scheme-card-row">套餐档位 ≤ 79元</div>
+          <div class="scheme-card-row">月均流量 ≥ 3GB</div>
+          <div class="scheme-card-row">终端类型 = 5G</div>
+          <div class="scheme-card-row"><span class="row-label">预估客群</span></div>
+          <div class="scheme-card-row"><span class="row-num">68.2万</span></div>
+          <div class="scheme-card-row"><span class="row-label">历史转化率</span></div>
+          <div class="scheme-card-row"><span class="row-num orange">8.1%</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="insight-tip">方案A推荐理由：成都区域历史数据显示，「低套餐+高流量+5G终端」组合的5G升档转化率最优，32.5万客群规模满足短信+外呼营销最低门槛。</div>
+    <div class="adopt-group">
+      <button class="btn-adopt" onclick="confirmSchemeSelection()">选方案A，高转化率</button>
+      <button class="btn-adj" onclick="confirmSchemeSelection('B')">选方案B，大规模</button>
+    </div>
+  `;
+  addAIMessage(html);
+
+  // 决策树添加核心标签节点
+  addTreeNode('套餐档位 ≤ 59元', 'green', '✓ 已采纳', [
+    { label: '类型：', value: '核心标签' },
+    { label: '用户数：', value: '1,823,400', num: true }
+  ], false);
+
+  addTreeNode('月均流量 ≥ 5GB', 'green', '✓ 已采纳', [
+    { label: '类型：', value: '核心标签' },
+    { label: '用户数：', value: '586,200', num: true }
+  ], false);
+
+  addTreeNode('终端类型 = 5G', 'green', '✓ 已采纳', [
+    { label: '类型：', value: '核心标签' },
+    { label: '用户数：', value: '352,700', num: true }
+  ], false);
+}
+
+// ===== 方案选择 =====
+function selectScheme(card, scheme) {
+  document.querySelectorAll('.scheme-card').forEach(c => c.classList.remove('selected'));
+  card.classList.add('selected');
+  selectedScheme = scheme;
+}
+
+function confirmSchemeSelection(scheme) {
+  if (scheme) selectedScheme = scheme;
+  if (selectedScheme === 'A') {
+    addUserMessage('选方案A，高转化率的');
+  } else {
+    addUserMessage('选方案B，大规模的');
+  }
+  step4_clarification();
+}
+
+// ===== 确认场景（快捷回复） =====
+function confirmScene() {
+  addUserMessage('确认场景，推荐标签');
+  // 已经自动进入Step3了，不需要重复
+}
+
+// ===== Step 4: 交互确认 =====
+function step4_clarification() {
+  currentStep = 4;
+  updateStepBar(4);
+
+  const html = `
+    <div class="label-line">已选择方案${selectedScheme}。确认前需要澄清以下问题（FR3: 交互式澄清与确认）：</div>
+    <div class="question-card">
+      <div class="question-card-header">是否需要排除近30天已营销用户？</div>
+      <div class="question-options" id="q1Options">
+        <div class="question-option selected" onclick="selectOption(this, 'q1', true)">
+          <div class="option-radio"></div>
+          <span>是，排除近30天已营销用户（推荐，避免营销疲劳）</span>
+        </div>
+        <div class="question-option" onclick="selectOption(this, 'q1', false)">
+          <div class="option-radio"></div>
+          <span>否，不限制</span>
+        </div>
+      </div>
+    </div>
+    <div class="question-card" style="margin-top:8px;">
+      <div class="question-card-header">客群规模偏好？</div>
+      <div class="question-options" id="q2Options">
+        <div class="question-option" onclick="selectOption(this, 'q2', 'A')">
+          <div class="option-radio"></div>
+          <span>A. 10万以内（精准触达）</span>
+        </div>
+        <div class="question-option selected" onclick="selectOption(this, 'q2', 'B')">
+          <div class="option-radio"></div>
+          <span>B. 10-50万（均衡方案，推荐）</span>
+        </div>
+        <div class="question-option" onclick="selectOption(this, 'q2', 'C')">
+          <div class="option-radio"></div>
+          <span>C. 50万以上（大规模覆盖）</span>
+        </div>
+      </div>
+    </div>
+    <div class="rec-card" style="margin-top:10px;">
+      <div class="rec-card-header green">最终确认方案</div>
+      <div class="rec-card-body" id="confirmSummary">
+        <div class="rec-row">
+          <span class="rec-label">核心标签</span>
+          <span class="rec-value">
+            <span class="rec-tag">套餐档位 ≤ 59元</span>
+            <span class="rec-tag">月均流量 ≥ 5GB</span>
+            <span class="rec-tag">终端类型 = 5G</span>
+          </span>
+        </div>
+        <div class="rec-row">
+          <span class="rec-label">排除标签</span>
+          <span class="rec-value">
+            <span class="rec-tag orange" id="excludeTag">近30天已营销用户</span>
+          </span>
+        </div>
+        <div class="rec-row">
+          <span class="rec-label">组合逻辑</span>
+          <span class="rec-value">核心标签 AND NOT 排除标签</span>
+        </div>
+        <div class="rec-row">
+          <span class="rec-label">预估客群</span>
+          <span class="rec-value"><strong style="color:#1677ff;font-size:14px;" id="estimateCount">28.7万人</strong>（排除已营销后）</span>
+        </div>
+        <div class="rec-row">
+          <span class="rec-label">预估转化率</span>
+          <span class="rec-value"><strong style="color:#52c41a;">12.3%</strong> · 预期转化 <strong>3.5万人</strong></span>
+        </div>
+      </div>
+    </div>
+    <div class="adopt-group">
+      <button class="btn-adopt" id="confirmBtn" onclick="confirmFinalScheme()">确认方案，开始分析</button>
+      <button class="btn-adj">调整标签</button>
+      <span class="adopt-hint">确认后将进入客群特征分析</span>
+    </div>
+  `;
+  addAIMessage(html);
+
+  // 决策树添加排除节点
+  addTreeNode('排除：近30天已营销', 'orange', '✓ 已采纳', [
+    { label: '类型：', value: '排除标签 (NOT)' },
+    { label: '排除数：', value: '65,700人' },
+    { label: '最终客群：', value: '287,000', num: true }
+  ], false);
+}
+
+// ===== 选项选择 =====
+function selectOption(opt, qId, value) {
+  const parent = document.getElementById(qId + 'Options');
+  parent.querySelectorAll('.question-option').forEach(s => s.classList.remove('selected'));
+  opt.classList.add('selected');
+
+  if (qId === 'q1') {
+    clarifications.excludeMarketed = value;
+    const tag = document.getElementById('excludeTag');
+    const count = document.getElementById('estimateCount');
+    if (value) {
+      tag.textContent = '近30天已营销用户';
+      tag.style.display = '';
+      count.textContent = '28.7万人';
+    } else {
+      tag.style.display = 'none';
+      count.textContent = '32.5万人';
+    }
+  } else if (qId === 'q2') {
+    clarifications.scale = value;
+  }
+}
+
+// ===== 确认最终方案 =====
+function confirmFinalScheme() {
+  const btn = document.getElementById('confirmBtn');
+  if (btn.classList.contains('adopted')) return;
+  btn.classList.add('adopted');
+  btn.textContent = '✓ 已确认';
+  addUserMessage('确认方案，开始分析');
+
+  // AI思考 -> 客群分析
+  isProcessing = true;
+  showTyping();
+  setTimeout(() => {
+    hideTyping();
+    step5_analysis();
+    isProcessing = false;
+  }, 2000);
+}
+
+// ===== Step 5: 客群分析 =====
+function step5_analysis() {
+  currentStep = 5;
+  updateStepBar(5);
+  switchCanvasView(5);
+
+  const html = `
+    <div class="label-line">客群特征分析报告已生成（FR4: 客群特征分析）：</div>
+    <div class="analysis-report">
+      <div class="analysis-section">
+        <div class="analysis-section-title">关键特征</div>
+        <div class="feature-tags">
+          <span class="feature-tag highlight">套餐集中39-59元 <span class="tag-arrow up">↑68%</span></span>
+          <span class="feature-tag highlight">月均流量5-10GB <span class="tag-arrow up">↑52%</span></span>
+          <span class="feature-tag highlight">5G终端占比 <span class="tag-arrow up">↑81%</span></span>
+          <span class="feature-tag normal">近3月无套餐变更 93%</span>
+          <span class="feature-tag normal">在网时长>12月 76%</span>
+        </div>
+      </div>
+      <div class="analysis-section">
+        <div class="analysis-section-title">选择优势</div>
+        <p style="font-size:12px;color:#666;line-height:1.7;">该客群具备<strong style="color:#1677ff;">「低套餐+高流量需求+5G终端」</strong>的典型升档特征。历史同类客群5G升档转化率达 <strong style="color:#52c41a;">12.3%</strong>，显著高于全量用户营销转化率（3.8%）。</p>
+      </div>
+      <div class="analysis-section">
+        <div class="analysis-section-title">风险提示</div>
+        <div class="insight-tip risk" style="margin-top:0;">检测到 <strong>2,341人</strong>（0.8%）近30天有投诉记录，建议触达时注意话术。<strong>5,680人</strong>（2.0%）为高离网风险用户，建议优先维系。</div>
+      </div>
+    </div>
+    <div class="insight-tip success">分析完成！您可以继续进行客群拆分，或直接发布客群。</div>
+    <div class="adopt-group">
+      <button class="btn-adopt" onclick="goToSplit()">进行客群拆分</button>
+      <button class="btn-adj" onclick="goToPublishDirect()">直接发布</button>
+    </div>
+  `;
+  addAIMessage(html);
+}
+
+// ===== 进入拆分 =====
+function goToSplit() {
+  addUserMessage('帮我按套餐档位拆分一下，适配不同产品');
+  isProcessing = true;
+  showTyping();
+  setTimeout(() => {
+    hideTyping();
+    step6_split();
+    isProcessing = false;
+  }, 1800);
+}
+
+// ===== Step 6: 客群拆分 =====
+function step6_split() {
+  currentStep = 6;
+  updateStepBar(6);
+  switchCanvasView(6);
+
+  const html = `
+    <div class="label-line">已按产品档位适配度评分拆分为4个子客群（FR5: 客群智能拆分）：</div>
+    <div class="split-result">
+      <div class="split-card">
+        <div class="split-card-icon c1">39</div>
+        <div class="split-card-info">
+          <div class="split-card-title">39元5G套餐适配组</div>
+          <div class="split-card-desc">当前ARPU 20-35元，流量3-5GB，适配低价入门5G套餐</div>
+        </div>
+        <div class="split-card-num">
+          <div class="num">10.0万</div>
+          <div class="label">占比 35.0%</div>
+          <div class="split-card-rate">预期转化 14.2%</div>
+        </div>
+      </div>
+      <div class="split-card">
+        <div class="split-card-icon c2">49</div>
+        <div class="split-card-info">
+          <div class="split-card-title">49元5G套餐适配组</div>
+          <div class="split-card-desc">当前ARPU 35-45元，流量5-8GB，适配中低档5G套餐</div>
+        </div>
+        <div class="split-card-num">
+          <div class="num">8.1万</div>
+          <div class="label">占比 28.2%</div>
+          <div class="split-card-rate">预期转化 13.1%</div>
+        </div>
+      </div>
+      <div class="split-card">
+        <div class="split-card-icon c3">59</div>
+        <div class="split-card-info">
+          <div class="split-card-title">59元5G套餐适配组</div>
+          <div class="split-card-desc">当前ARPU 45-55元，流量8-12GB，适配主流5G套餐</div>
+        </div>
+        <div class="split-card-num">
+          <div class="num">6.3万</div>
+          <div class="label">占比 22.0%</div>
+          <div class="split-card-rate">预期转化 12.8%</div>
+        </div>
+      </div>
+      <div class="split-card">
+        <div class="split-card-icon c4">79</div>
+        <div class="split-card-info">
+          <div class="split-card-title">79元5G套餐适配组</div>
+          <div class="split-card-desc">当前ARPU 55-59元，流量>12GB，适配高档5G套餐</div>
+        </div>
+        <div class="split-card-num">
+          <div class="num">4.3万</div>
+          <div class="label">占比 14.8%</div>
+          <div class="split-card-rate">预期转化 10.5%</div>
+        </div>
+      </div>
+    </div>
+    <div class="insight-tip">拆分依据：基于用户ARPU值、流量使用量、历史升档转化率计算各档位<strong>适配度评分</strong>，将用户分配到适配度最高的档位。子客群间互斥，无重叠用户。</div>
+    <div class="adopt-group">
+      <button class="btn-adopt" onclick="goToPublish()">确认拆分，去发布</button>
+      <button class="btn-adj" onclick="userTypeMessage('按权益产品拆分')">按权益产品拆分</button>
+      <button class="btn-adj" onclick="userTypeMessage('按比例拆分')">按比例拆分</button>
+    </div>
+  `;
+  addAIMessage(html);
+}
+
+// ===== 直接发布（跳过拆分） =====
+function goToPublishDirect() {
+  addUserMessage('直接发布客群');
+  goToPublish();
+}
+
+// ===== 进入发布 =====
+function goToPublish() {
+  isProcessing = true;
+  showTyping();
+  setTimeout(() => {
+    hideTyping();
+    step7_publish();
+    isProcessing = false;
+  }, 1800);
+}
+
+// ===== Step 7: 客群发布 =====
+function step7_publish() {
+  currentStep = 7;
+  updateStepBar(7);
+  switchCanvasView(7);
+
+  const html = `
+    <div class="label-line">客群发布流程（FR6: 客群发布）：</div>
+    <div class="publish-flow" id="publishFlow">
+      <div class="publish-step done">
+        <div class="publish-step-icon done">✓</div>
+        <div class="publish-step-content">
+          <div class="publish-step-title done">合规校验</div>
+          <div class="publish-step-desc">客群规模28.7万 ✓ · 标签合规 ✓ · 营销频次校验 ✓ · 黑名单排除 ✓</div>
+        </div>
+      </div>
+      <div class="publish-step done">
+        <div class="publish-step-icon done">✓</div>
+        <div class="publish-step-content">
+          <div class="publish-step-title done">客群快照生成</div>
+          <div class="publish-step-desc">用户清单 + 标签方案 + 特征报告已生成快照，有效期7天</div>
+        </div>
+      </div>
+      <div class="publish-step" id="approvalStep">
+        <div class="publish-step-icon current">3</div>
+        <div class="publish-step-content">
+          <div class="publish-step-title">审批提交</div>
+          <div class="publish-step-desc">客群规模>10万，需市级管理员审批（预计2小时内）</div>
+        </div>
+      </div>
+      <div class="publish-step" id="pushStep">
+        <div class="publish-step-icon pending">4</div>
+        <div class="publish-step-content">
+          <div class="publish-step-title pending">推送营销系统</div>
+          <div class="publish-step-desc">审批通过后推送至短信/外呼/APP推送渠道</div>
+        </div>
+      </div>
+    </div>
+    <div class="insight-tip success">合规校验通过！审批工单已提交，等待审批中...</div>
+    <div class="rec-card" style="margin-top:10px;">
+      <div class="rec-card-header">发布信息摘要</div>
+      <div class="rec-card-body">
+        <div class="rec-row">
+          <span class="rec-label">客群ID</span>
+          <span class="rec-value">CG-20260710-001</span>
+        </div>
+        <div class="rec-row">
+          <span class="rec-label">总规模</span>
+          <span class="rec-value"><strong style="color:#1677ff;">287,000人</strong>（4个子客群）</span>
+        </div>
+        <div class="rec-row">
+          <span class="rec-label">推送渠道</span>
+          <span class="rec-value">
+            <span class="rec-tag">短信</span>
+            <span class="rec-tag">外呼</span>
+            <span class="rec-tag">APP推送</span>
+          </span>
+        </div>
+        <div class="rec-row">
+          <span class="rec-label">预计触达</span>
+          <span class="rec-value">审批通过后T+1日内完成全量触达</span>
+        </div>
+        <div class="rec-row">
+          <span class="rec-label">效果追踪</span>
+          <span class="rec-value">发布后将持续追踪转化效果，回流优化推荐模型</span>
+        </div>
+      </div>
+    </div>
+    <div class="adopt-group">
+      <button class="btn-adopt" id="simulateApprovalBtn" onclick="simulateApproval()">模拟审批流程</button>
+    </div>
+  `;
+  addAIMessage(html);
+}
+
+// ===== 模拟审批 =====
+function simulateApproval() {
+  document.getElementById('approvalModal').classList.add('show');
+}
+
+function closeApproval(approved) {
+  document.getElementById('approvalModal').classList.remove('show');
+
+  if (approved) {
+    // 更新审批步骤
+    const approvalStep = document.getElementById('approvalStep');
+    approvalStep.querySelector('.publish-step-icon').className = 'publish-step-icon done';
+    approvalStep.querySelector('.publish-step-icon').textContent = '✓';
+    approvalStep.querySelector('.publish-step-title').className = 'publish-step-title done';
+
+    // 更新推送步骤
+    setTimeout(() => {
+      const pushStep = document.getElementById('pushStep');
+      pushStep.querySelector('.publish-step-icon').className = 'publish-step-icon current';
+      pushStep.querySelector('.publish-step-icon').textContent = '4';
+      pushStep.querySelector('.publish-step-title').className = 'publish-step-title';
+      pushStep.querySelector('.publish-step-title').textContent = '推送营销系统（进行中...）';
+    }, 800);
+
+    // 推送完成
+    setTimeout(() => {
+      const pushStep = document.getElementById('pushStep');
+      pushStep.querySelector('.publish-step-icon').className = 'publish-step-icon done';
+      pushStep.querySelector('.publish-step-icon').textContent = '✓';
+      pushStep.querySelector('.publish-step-title').className = 'publish-step-title done';
+      pushStep.querySelector('.publish-step-title').textContent = '推送营销系统';
+      pushStep.querySelector('.publish-step-desc').textContent = '已推送至短信/外呼/APP推送渠道，T+1日完成全量触达';
+
+      // 更新画布
+      document.getElementById('publishIcon').textContent = '✅';
+      document.getElementById('publishTitle').textContent = '已发布';
+      document.getElementById('publishSub').textContent = '客群CG-20260710-001 · 已推送至营销系统';
+      document.getElementById('publishHeader').style.background = 'linear-gradient(135deg, #52c41a, #73d13d)';
+
+      // 完成提示
+      const completeHtml = `
+        <div class="flow-complete">
+          <div class="flow-complete-icon">🎉</div>
+          <div class="flow-complete-title">客群发布完成！</div>
+          <div class="flow-complete-desc">客群CG-20260710-001已成功推送至营销系统，预计T+1日完成全量触达。</div>
+        </div>
+        <div class="adopt-group">
+          <button class="btn-adopt" onclick="newChat()">开始新对话</button>
+          <button class="btn-adj" onclick="goToStep(1)">查看完整流程</button>
+        </div>
+      `;
+      addAIMessage(completeHtml);
+      published = true;
+    }, 2500);
+  } else {
+    addAIMessage('<div class="insight-tip risk">审批已驳回。请调整客群方案后重新提交。可修改标签取值或缩小客群规模。</div>');
+  }
+}
+
+// ===== 步骤跳转（查看模式） =====
+function goToStep(step) {
+  if (step > currentStep) return;
+  updateStepBar(step);
+  switchCanvasView(step);
+  scrollToBottom();
+}
+
+// ===== 新对话 =====
+function newChat() {
+  location.reload();
+}
+
+// ===== 发送消息 =====
+function sendMessage() {
+  if (isProcessing) return;
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  input.style.height = 'auto';
+  userTypeMessage(text);
+}
+
+function userTypeMessage(text) {
+  if (isProcessing) return;
+  addUserMessage(text);
+
+  isProcessing = true;
+  showTyping();
+  setTimeout(() => {
+    hideTyping();
+    handleUserInput(text);
+    isProcessing = false;
+  }, 1200);
+}
+
+function handleUserInput(text) {
+  const lower = text.toLowerCase();
+
+  // 根据当前步骤和输入内容响应
+  if (currentStep >= 5 && currentStep < 6 && (text.includes('拆分') || text.includes('split'))) {
+    step6_split();
+  } else if (currentStep >= 5 && currentStep < 7 && (text.includes('发布') || text.includes('publish'))) {
+    step7_publish();
+  } else if (currentStep >= 4 && currentStep < 5 && (text.includes('分析') || text.includes('确认'))) {
+    step5_analysis();
+  } else if (text.includes('按比例拆分')) {
+    addAIMessage('<div class="insight-tip">按比例拆分功能：可设置各子客群占比（如40%/30%/20%/10%），系统将随机分配用户。请输入各档位比例（如：40,30,20,10）。</div><div class="adopt-group"><button class="btn-adj" onclick="step6_split()">使用默认产品适配拆分</button></div>');
+  } else if (text.includes('权益产品')) {
+    addAIMessage('<div class="label-line">权益产品拆分方案：</div><div class="split-result"><div class="split-card"><div class="split-card-icon c1">🎥</div><div class="split-card-info"><div class="split-card-title">腾讯视频会员组</div><div class="split-card-desc">偏好视频类内容，月均视频流量>2GB</div></div><div class="split-card-num"><div class="num">9.2万</div><div class="label">32.1%</div></div></div><div class="split-card"><div class="split-card-icon c2">🎵</div><div class="split-card-info"><div class="split-card-title">QQ音乐会员组</div><div class="split-card-desc">偏好音乐类内容，月均音乐流量>500MB</div></div><div class="split-card-num"><div class="num">6.8万</div><div class="label">23.7%</div></div></div><div class="split-card"><div class="split-card-icon c3">🎮</div><div class="split-card-info"><div class="split-card-title">游戏加速器组</div><div class="split-card-desc">游戏活跃用户，月均游戏流量>1GB</div></div><div class="split-card-num"><div class="num">7.5万</div><div class="label">26.1%</div></div></div><div class="split-card"><div class="split-card-icon c4">📦</div><div class="split-card-info"><div class="split-card-title">通用权益组</div><div class="split-card-desc">无显著偏好，适配通用权益包</div></div><div class="split-card-num"><div class="num">5.2万</div><div class="label">18.1%</div></div></div></div><div class="adopt-group"><button class="btn-adopt" onclick="goToPublish()">确认拆分，去发布</button></div>');
+    switchCanvasView(6);
+    updateStepBar(6);
+    currentStep = 6;
+  } else {
+    // 默认回复
+    addAIMessage('<div class="label-line">我已收到您的消息：「' + escapeHtml(text) + '」</div><div class="insight-tip">您可以通过以下方式继续操作：<br>• 点击上方方案卡片选择标签组合<br>• 点击按钮确认或调整方案<br>• 输入「拆分」「发布」「分析」等关键词快速跳转</div>');
+  }
+}
+
+// ===== 输入框自适应 =====
+const chatInput = document.getElementById('chatInput');
+chatInput.addEventListener('input', function() {
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+});
+chatInput.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+});
+</script>
+
+</body>
+</html>
